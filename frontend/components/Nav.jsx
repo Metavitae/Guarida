@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { PawPrint, ChevronRight } from "lucide-react";
 import { COLORS, FONTS } from "../lib/design-tokens";
 
@@ -11,10 +12,12 @@ import { COLORS, FONTS } from "../lib/design-tokens";
 export default function Nav({ crumb, orgName = "Wet Noses" }) {
   return (
     <div style={{ backgroundColor: COLORS.night }} className="px-6 md:px-12 py-5 flex items-center gap-3">
-      <PawPrint size={18} color={COLORS.marigold} />
-      <span style={{ fontFamily: FONTS.display, color: COLORS.paper }} className="text-lg">
-        Guarida
-      </span>
+      <Link href="/" className="flex items-center gap-3">
+        <PawPrint size={18} color={COLORS.marigold} />
+        <span style={{ fontFamily: FONTS.display, color: COLORS.paper }} className="text-lg">
+          Guarida
+        </span>
+      </Link>
       <ChevronRight size={14} color={`${COLORS.paper}66`} />
       <span
         style={{ color: `${COLORS.paper}99`, fontFamily: FONTS.mono }}
