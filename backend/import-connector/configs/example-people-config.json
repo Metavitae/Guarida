@@ -1,0 +1,12 @@
+{
+  "entity": "people",
+  "orgId": "00000000-0000-0000-0000-000000000001",
+  "csvPath": "./sample_people.csv",
+  "mapping": {
+    "full_name": "Full Name",
+    "email": "Email Address",
+    "whatsapp_number": "Cell",
+    "role": "Position"
+  },
+  "defaultRole": "volunteer"
+}
