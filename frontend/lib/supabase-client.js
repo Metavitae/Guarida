@@ -24,6 +24,28 @@ export function requireSupabase() {
   return supabase;
 }
 
+// English-language coverage, additive to the Spanish literal-text matching
+// below. Wet Noses' foster network reaches the US/Canada, so an English
+// description needs to match too — the legal_references table itself is
+// Spanish-only (real Mexican statute text), so word-overlap against
+// title+summary alone can never catch English input. Hand-picked per
+// statute_code so each keyword/phrase actually corresponds to what that
+// specific law covers, not a blind word-for-word translation.
+const EN_KEYWORDS_BY_STATUTE = {
+  "CPN Art. 422 (also cited as Art. 384 in one source — needs lawyer verification)": [
+    "tied up", "tied", "chained", "without food", "without water", "no food",
+    "no water", "starving", "starved", "dehydrated", "dehydration",
+    "abandoned", "abandonment", "neglect", "torture", "mutilation",
+    "deprived", "deprivation", "shelter", "veterinary care", "cruelty", "abuse",
+  ],
+  "CPN Art. 423": [
+    "recorded", "filmed", "video", "published", "posted online", "veterinarian",
+  ],
+  "Ley de Protección a la Fauna para el Estado de Nayarit, Art. 71": [
+    "duty to report", "obligation to report", "witness", "report to authorities",
+  ],
+};
+
 // Real version of the suggestLegalMatches logic from case-intake.js,
 // adapted to run client-side against the actual legal_references table
 // instead of the hardcoded 3-entry sample the first mockup used.
@@ -41,12 +63,15 @@ export async function suggestLegalMatches(description, jurisdiction) {
   const words = new Set(
     description.toLowerCase().replace(/[^\w\sáéíóúñ]/gi, "").split(/\s+/).filter(Boolean)
   );
+  const lowerDescription = description.toLowerCase();
 
   return references
     .map((ref) => {
       const refWords = `${ref.title} ${ref.summary}`.toLowerCase().split(/\s+/);
-      const overlap = refWords.filter((w) => words.has(w)).length;
-      return { ...ref, score: overlap };
+      const spanishScore = refWords.filter((w) => words.has(w)).length;
+      const enKeywords = EN_KEYWORDS_BY_STATUTE[ref.statute_code] || [];
+      const englishScore = enKeywords.filter((kw) => lowerDescription.includes(kw)).length;
+      return { ...ref, score: spanishScore + englishScore };
     })
     .filter((r) => r.score > 0)
     .sort((a, b) => b.score - a.score)

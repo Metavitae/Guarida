@@ -13,11 +13,15 @@ import { supabase, suggestLegalMatches as suggestLegalMatchesReal } from "../../
 // labeled in the UI so nobody mistakes sample data for real matches.
 const SAMPLE_LEGAL_REFS = [
   { id: "1", statute_code: "CPN Art. 422", title: "Maltrato o crueldad animal (Nayarit)",
-    keywords: ["golpes", "golpe", "abandono", "agua", "alimento", "herida", "heridas", "crueldad", "maltrato"] },
+    keywords: ["golpes", "golpe", "abandono", "agua", "alimento", "herida", "heridas", "crueldad", "maltrato",
+      "tied up", "tied", "chained", "without food", "without water", "no food", "no water",
+      "starving", "starved", "dehydrated", "abandoned", "neglect", "cruelty", "abuse"] },
   { id: "2", statute_code: "CPN Art. 423", title: "Agravantes — grabación o publicación del maltrato",
-    keywords: ["video", "grabó", "grabaron", "publicó", "fotos", "foto"] },
+    keywords: ["video", "grabó", "grabaron", "publicó", "fotos", "foto",
+      "recorded", "filmed", "published", "posted online"] },
   { id: "3", statute_code: "LGVS Art. 29-30", title: "Trato digno a fauna silvestre",
-    keywords: ["silvestre", "salvaje", "iguana", "tortuga", "ave", "venado", "coyote"] },
+    keywords: ["silvestre", "salvaje", "iguana", "tortuga", "ave", "venado", "coyote",
+      "wildlife", "wild animal", "iguana", "turtle", "coyote"] },
 ];
 
 function sampleMatch(description) {
