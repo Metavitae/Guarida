@@ -3,14 +3,18 @@
 // function here will throw clearly rather than silently fail, so it's
 // obvious when something's running against a real backend vs. mock data.
 
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+// Cookie-based client (via @supabase/ssr) instead of the plain JS SDK's
+// localStorage-based one - this is what lets the login/logout flow and
+// middleware.js's server-side auth checks share the same session as any
+// data query made from this file.
 export const supabase =
   SUPABASE_URL && SUPABASE_ANON_KEY
-    ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    ? createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     : null;
 
 export function requireSupabase() {

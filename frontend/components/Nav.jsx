@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { PawPrint, ChevronRight } from "lucide-react";
 import { COLORS, FONTS } from "../lib/design-tokens";
+import LogoutButton from "./LogoutButton";
 
 // Every screen had its own slightly-different copy of this nav bar.
 // One real bug that copy-paste caused: the Vet Care screen's breadcrumb
@@ -25,6 +26,7 @@ export default function Nav({ crumb, orgName = "Wet Noses" }) {
       >
         {crumb} · {orgName}
       </span>
+      <LogoutButton />
     </div>
   );
 }
