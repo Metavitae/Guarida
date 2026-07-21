@@ -5,9 +5,9 @@ import {
   PawPrint, Camera, MapPin, AlertTriangle, Check, X,
   Plus, Stethoscope, ScrollText,
 } from "lucide-react";
-import Nav from "../components/Nav";
-import { COLORS, FONTS, inputStyle } from "../lib/design-tokens";
-import { supabase, suggestLegalMatches as suggestLegalMatchesReal } from "../lib/supabase-client";
+import Nav from "../../components/Nav";
+import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
+import { supabase, suggestLegalMatches as suggestLegalMatchesReal } from "../../lib/supabase-client";
 
 // Fallback sample, used ONLY when Supabase isn't configured yet — clearly
 // labeled in the UI so nobody mistakes sample data for real matches.
