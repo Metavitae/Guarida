@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Globe2, ArrowRight } from "lucide-react";
 import Nav from "../../components/Nav";
+import Reveal from "../../components/Reveal";
 import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
 import { supabase } from "../../lib/supabase-client";
 
@@ -146,25 +147,27 @@ export default function CrossBorderPage() {
           <p style={{ color: `${COLORS.ink}77` }} className="text-sm">Loading…</p>
         ) : (
           <>
-            <Field label="Animal">
-              <div className="flex gap-2">
-                <select
-                  value={selectedAnimalId}
-                  onChange={(e) => setSelectedAnimalId(e.target.value)}
-                  style={{ ...inputStyle }}
-                  className="flex-1 rounded-xl px-3 py-2 text-sm outline-none"
-                >
-                  <option value="">Select an animal…</option>
-                  {animals.map((a) => (
-                    <option key={a.id} value={a.id}>{a.name || "(unnamed)"} · {a.species} · {a.status}</option>
-                  ))}
-                </select>
-                <button type="button" onClick={() => setShowAddAnimal(!showAddAnimal)}
-                  style={{ color: COLORS.teal }} className="text-xs flex items-center gap-1 font-medium shrink-0">
-                  <Plus size={14} /> New
-                </button>
-              </div>
-            </Field>
+            <Reveal>
+              <Field label="Animal">
+                <div className="flex gap-2">
+                  <select
+                    value={selectedAnimalId}
+                    onChange={(e) => setSelectedAnimalId(e.target.value)}
+                    style={{ ...inputStyle }}
+                    className="flex-1 rounded-xl px-3 py-2 text-sm outline-none"
+                  >
+                    <option value="">Select an animal…</option>
+                    {animals.map((a) => (
+                      <option key={a.id} value={a.id}>{a.name || "(unnamed)"} · {a.species} · {a.status}</option>
+                    ))}
+                  </select>
+                  <button type="button" onClick={() => setShowAddAnimal(!showAddAnimal)}
+                    style={{ color: COLORS.teal }} className="text-xs flex items-center gap-1 font-medium shrink-0">
+                    <Plus size={14} /> New
+                  </button>
+                </div>
+              </Field>
+            </Reveal>
 
             {showAddAnimal && (
               <form onSubmit={handleAddAnimal} style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-xl p-4 mb-6 flex gap-2 items-end">
@@ -186,82 +189,88 @@ export default function CrossBorderPage() {
 
             {selectedAnimal && (
               <>
-                <div style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-2xl p-5 mb-6 flex items-center gap-4">
-                  <div style={{ backgroundColor: `${COLORS.marigold}18` }} className="h-10 w-10 rounded-full flex items-center justify-center shrink-0">
-                    <Globe2 size={16} color={COLORS.marigold} />
-                  </div>
-                  <div className="flex-1">
-                    <div style={{ color: COLORS.ink }} className="text-sm font-medium">{selectedAnimal.name || "(unnamed)"}</div>
-                    <div style={{ color: `${COLORS.ink}77` }} className="text-xs">Top-level status</div>
-                  </div>
-                  <select
-                    value={selectedAnimal.status}
-                    onChange={(e) => handleAnimalStatusChange(selectedAnimal.id, e.target.value)}
-                    style={{ backgroundColor: COLORS.paper, color: COLORS.ink }}
-                    className="rounded-xl px-3 py-2 text-sm outline-none"
-                  >
-                    {ANIMAL_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-
-                <div style={{ backgroundColor: COLORS.nightDeep }} className="rounded-2xl p-6 mb-6">
-                  <div style={{ color: COLORS.paper, fontFamily: FONTS.mono }} className="text-xs uppercase tracking-wide mb-4">
-                    Log a transport record
-                  </div>
-                  <form onSubmit={handleLogTransport} className="space-y-3">
-                    <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
-                      style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="w-full rounded-xl px-3 py-2 text-sm outline-none">
-                      {TRANSPORT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                <Reveal delay={0.03}>
+                  <div style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-2xl p-5 mb-6 flex items-center gap-4">
+                    <div style={{ backgroundColor: `${COLORS.marigold}18` }} className="h-10 w-10 rounded-full flex items-center justify-center shrink-0">
+                      <Globe2 size={16} color={COLORS.marigold} />
+                    </div>
+                    <div className="flex-1">
+                      <div style={{ color: COLORS.ink }} className="text-sm font-medium">{selectedAnimal.name || "(unnamed)"}</div>
+                      <div style={{ color: `${COLORS.ink}77` }} className="text-xs">Top-level status</div>
+                    </div>
+                    <select
+                      value={selectedAnimal.status}
+                      onChange={(e) => handleAnimalStatusChange(selectedAnimal.id, e.target.value)}
+                      style={{ backgroundColor: COLORS.paper, color: COLORS.ink }}
+                      className="rounded-xl px-3 py-2 text-sm outline-none"
+                    >
+                      {ANIMAL_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    <div className="grid grid-cols-2 gap-3">
-                      <input placeholder="Destination country" value={form.destinationCountry} onChange={(e) => setForm({ ...form, destinationCountry: e.target.value })}
-                        style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="rounded-xl px-3 py-2 text-sm outline-none" />
-                      <input placeholder="Destination state" value={form.destinationState} onChange={(e) => setForm({ ...form, destinationState: e.target.value })}
-                        style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="rounded-xl px-3 py-2 text-sm outline-none" />
+                  </div>
+                </Reveal>
+
+                <Reveal delay={0.06}>
+                  <div style={{ backgroundColor: COLORS.nightDeep }} className="rounded-2xl p-6 mb-6">
+                    <div style={{ color: COLORS.paper, fontFamily: FONTS.mono }} className="text-xs uppercase tracking-wide mb-4">
+                      Log a transport record
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label style={{ color: `${COLORS.paper}99`, fontFamily: FONTS.mono }} className="block text-[10px] uppercase mb-1">Quarantine start</label>
-                        <input type="date" value={form.quarantineStart} onChange={(e) => setForm({ ...form, quarantineStart: e.target.value })}
-                          style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
+                    <form onSubmit={handleLogTransport} className="space-y-3">
+                      <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
+                        style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="w-full rounded-xl px-3 py-2 text-sm outline-none">
+                        {TRANSPORT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      <div className="grid grid-cols-2 gap-3">
+                        <input placeholder="Destination country" value={form.destinationCountry} onChange={(e) => setForm({ ...form, destinationCountry: e.target.value })}
+                          style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="rounded-xl px-3 py-2 text-sm outline-none" />
+                        <input placeholder="Destination state" value={form.destinationState} onChange={(e) => setForm({ ...form, destinationState: e.target.value })}
+                          style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="rounded-xl px-3 py-2 text-sm outline-none" />
                       </div>
-                      <div>
-                        <label style={{ color: `${COLORS.paper}99`, fontFamily: FONTS.mono }} className="block text-[10px] uppercase mb-1">Quarantine end</label>
-                        <input type="date" value={form.quarantineEnd} onChange={(e) => setForm({ ...form, quarantineEnd: e.target.value })}
-                          style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label style={{ color: `${COLORS.paper}99`, fontFamily: FONTS.mono }} className="block text-[10px] uppercase mb-1">Quarantine start</label>
+                          <input type="date" value={form.quarantineStart} onChange={(e) => setForm({ ...form, quarantineStart: e.target.value })}
+                            style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
+                        </div>
+                        <div>
+                          <label style={{ color: `${COLORS.paper}99`, fontFamily: FONTS.mono }} className="block text-[10px] uppercase mb-1">Quarantine end</label>
+                          <input type="date" value={form.quarantineEnd} onChange={(e) => setForm({ ...form, quarantineEnd: e.target.value })}
+                            style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
+                        </div>
+                        <div>
+                          <label style={{ color: `${COLORS.paper}99`, fontFamily: FONTS.mono }} className="block text-[10px] uppercase mb-1">Transport date</label>
+                          <input type="date" value={form.transportDate} onChange={(e) => setForm({ ...form, transportDate: e.target.value })}
+                            style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
+                        </div>
                       </div>
-                      <div>
-                        <label style={{ color: `${COLORS.paper}99`, fontFamily: FONTS.mono }} className="block text-[10px] uppercase mb-1">Transport date</label>
-                        <input type="date" value={form.transportDate} onChange={(e) => setForm({ ...form, transportDate: e.target.value })}
-                          style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
-                      </div>
-                    </div>
-                    <input placeholder="Notes (optional)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                      style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
-                    <button type="submit" style={{ backgroundColor: COLORS.marigold, color: COLORS.nightDeep }} className="w-full rounded-full py-3 font-medium text-sm">
-                      Log record
-                    </button>
-                  </form>
-                </div>
+                      <input placeholder="Notes (optional)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                        style={{ backgroundColor: "#FFFFFF", color: COLORS.ink }} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
+                      <button type="submit" style={{ backgroundColor: COLORS.marigold, color: COLORS.nightDeep }} className="w-full rounded-full py-3 font-medium text-sm">
+                        Log record
+                      </button>
+                    </form>
+                  </div>
+                </Reveal>
 
                 {selectedTransports.length > 0 && (
                   <div className="space-y-2">
-                    {selectedTransports.map((t) => (
-                      <div key={t.id} style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-xl px-4 py-3 flex items-center gap-3">
-                        <ArrowRight size={14} color={COLORS.teal} className="shrink-0" />
-                        <div className="flex-1 min-w-0 text-sm" style={{ color: COLORS.ink }}>
-                          {[t.destination_state, t.destination_country].filter(Boolean).join(", ") || "(no destination set)"}
-                          {t.notes && <span style={{ color: `${COLORS.ink}77` }}> — {t.notes}</span>}
+                    {selectedTransports.map((t, i) => (
+                      <Reveal key={t.id} delay={Math.min(i, 5) * 0.03}>
+                        <div style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-xl px-4 py-3 flex items-center gap-3">
+                          <ArrowRight size={14} color={COLORS.teal} className="shrink-0" />
+                          <div className="flex-1 min-w-0 text-sm" style={{ color: COLORS.ink }}>
+                            {[t.destination_state, t.destination_country].filter(Boolean).join(", ") || "(no destination set)"}
+                            {t.notes && <span style={{ color: `${COLORS.ink}77` }}> — {t.notes}</span>}
+                          </div>
+                          <select
+                            value={t.status}
+                            onChange={(e) => handleTransportStatusChange(t.id, e.target.value)}
+                            style={{ backgroundColor: COLORS.paper, color: COLORS.ink }}
+                            className="rounded-full px-3 py-1 text-xs outline-none shrink-0"
+                          >
+                            {TRANSPORT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                          </select>
                         </div>
-                        <select
-                          value={t.status}
-                          onChange={(e) => handleTransportStatusChange(t.id, e.target.value)}
-                          style={{ backgroundColor: COLORS.paper, color: COLORS.ink }}
-                          className="rounded-full px-3 py-1 text-xs outline-none shrink-0"
-                        >
-                          {TRANSPORT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </div>
+                      </Reveal>
                     ))}
                   </div>
                 )}

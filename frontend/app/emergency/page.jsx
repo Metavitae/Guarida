@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { PawPrint, Home as HomeIcon, TreePine, Phone, Mail, ExternalLink, MapPin, AlertCircle } from "lucide-react";
 import Nav from "../../components/Nav";
+import Reveal from "../../components/Reveal";
 import { COLORS, FONTS } from "../../lib/design-tokens";
 
 // Reference content only - not a form/workflow. Every number/link here is
@@ -72,23 +73,25 @@ export default function EmergencyPage() {
         </p>
 
         {/* Situation picker */}
-        <div className="flex gap-2 mb-4">
-          {SITUATIONS.map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => setSituation(key)}
-              style={{
-                backgroundColor: situation === key ? COLORS.coral : "#FFFFFF",
-                color: situation === key ? "#FFFFFF" : COLORS.ink,
-                border: `1.5px solid ${situation === key ? COLORS.coral : COLORS.line}`,
-              }}
-              className="flex-1 rounded-xl py-3 text-xs font-medium flex flex-col items-center gap-1.5"
-            >
-              <Icon size={16} />
-              {label}
-            </button>
-          ))}
-        </div>
+        <Reveal>
+          <div className="flex gap-2 mb-4">
+            {SITUATIONS.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setSituation(key)}
+                style={{
+                  backgroundColor: situation === key ? COLORS.coral : "#FFFFFF",
+                  color: situation === key ? "#FFFFFF" : COLORS.ink,
+                  border: `1.5px solid ${situation === key ? COLORS.coral : COLORS.line}`,
+                }}
+                className="flex-1 rounded-xl py-3 text-xs font-medium flex flex-col items-center gap-1.5"
+              >
+                <Icon size={16} />
+                {label}
+              </button>
+            ))}
+          </div>
+        </Reveal>
 
         {/* Location toggle - not applicable to wildlife, which is federal */}
         {situation !== "wildlife" && (
@@ -118,7 +121,7 @@ export default function EmergencyPage() {
         )}
 
         {/* Primary routed result */}
-        <div className="mb-4">
+        <Reveal delay={0.03} className="mb-4">
           {situation === "wildlife" && (
             <ContactCard title="PROFEPA — Federal wildlife authority" source="Federal · fauna silvestre only" accent={COLORS.marigold}>
               <p><strong>For wildlife (fauna silvestre) only — not domestic dogs/cats.</strong> Use one of the Nayarit/Jalisco channels above for domestic animals.</p>
@@ -177,11 +180,11 @@ export default function EmergencyPage() {
               <p style={{ color: `${COLORS.ink}99` }} className="text-xs">Monday–Friday, 9:00 AM – 4:00 PM.</p>
             </ContactCard>
           )}
-        </div>
+        </Reveal>
 
         {/* Nayarit state-level, distinct from the municipal channel above */}
         {situation !== "wildlife" && location === "nayarit" && (
-          <div className="mb-4">
+          <Reveal delay={0.06} className="mb-4">
             <ContactCard title="Nayarit state hotline — general animal cruelty" source="State · Nayarit">
               <a href="tel:089" style={{ color: COLORS.teal }} className="flex items-center gap-2 font-medium">
                 <Phone size={14} /> 089
@@ -190,37 +193,39 @@ export default function EmergencyPage() {
                 Or in person: Módulo de Atención Temprana de la Fiscalía del Estado.
               </p>
             </ContactCard>
-          </div>
+          </Reveal>
         )}
 
         {/* Always-visible general emergency */}
-        <div className="mb-4">
+        <Reveal delay={0.09} className="mb-4">
           <ContactCard title="Any immediate emergency" source="Nationwide">
             <a href="tel:911" style={{ color: COLORS.teal }} className="flex items-center gap-2 font-medium">
               <Phone size={14} /> 911 — works in Nayarit and Jalisco both
             </a>
           </ContactCard>
-        </div>
+        </Reveal>
 
         {/* Always-visible Wet Noses fallback */}
-        <div style={{ backgroundColor: COLORS.nightDeep }} className="rounded-2xl p-5">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <h3 style={{ fontFamily: FONTS.display, color: COLORS.paper }} className="text-lg">Not sure? Contact Wet Noses directly</h3>
-            <SourceTag light>Wet Noses Rescue</SourceTag>
-          </div>
-          <div className="space-y-2 text-sm">
-            <a href="tel:+12064137446" style={{ color: COLORS.marigold }} className="flex items-center gap-2 font-medium">
-              <Phone size={14} /> +1 (206) 413-7446
-            </a>
-            <a href="mailto:info@wetnosesrescue.org" style={{ color: COLORS.marigold }} className="flex items-center gap-2 font-medium">
-              <Mail size={14} /> info@wetnosesrescue.org
-            </a>
-            <div style={{ color: `${COLORS.paper}77` }} className="flex items-center gap-1.5 text-xs italic pt-1">
-              <AlertCircle size={12} />
-              A separate after-hours vet line: not publicly available — not listed here rather than guessed.
+        <Reveal delay={0.12}>
+          <div style={{ backgroundColor: COLORS.nightDeep }} className="rounded-2xl p-5">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h3 style={{ fontFamily: FONTS.display, color: COLORS.paper }} className="text-lg">Not sure? Contact Wet Noses directly</h3>
+              <SourceTag light>Wet Noses Rescue</SourceTag>
+            </div>
+            <div className="space-y-2 text-sm">
+              <a href="tel:+12064137446" style={{ color: COLORS.marigold }} className="flex items-center gap-2 font-medium">
+                <Phone size={14} /> +1 (206) 413-7446
+              </a>
+              <a href="mailto:info@wetnosesrescue.org" style={{ color: COLORS.marigold }} className="flex items-center gap-2 font-medium">
+                <Mail size={14} /> info@wetnosesrescue.org
+              </a>
+              <div style={{ color: `${COLORS.paper}77` }} className="flex items-center gap-1.5 text-xs italic pt-1">
+                <AlertCircle size={12} />
+                A separate after-hours vet line: not publicly available — not listed here rather than guessed.
+              </div>
             </div>
           </div>
-        </div>
+        </Reveal>
       </div>
     </div>
   );
