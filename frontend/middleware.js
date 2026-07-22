@@ -1,8 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
-// Gates /case-intake, /donors, /vet-care to active admin/staff/vet workers
-// only. Runs on every matched request, not just at sign-in - is_active_worker()
+// Gates /case-intake, /donors, /vet-care, /inventory, /expenses to active
+// admin/staff/vet workers only. Runs on every matched request, not just at
+// sign-in - is_active_worker()
 // is queried live from the DB each time (not a cached JWT claim), which is
 // what makes revoking someone's membership take effect on their very next
 // request instead of waiting for token expiry - the same kill-switch
@@ -56,5 +57,5 @@ export async function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/case-intake/:path*", "/donors/:path*", "/vet-care/:path*"],
+  matcher: ["/case-intake/:path*", "/donors/:path*", "/vet-care/:path*", "/inventory/:path*", "/expenses/:path*"],
 };
