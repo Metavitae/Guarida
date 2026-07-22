@@ -172,13 +172,13 @@ export async function sendDonorUpdateNotice(donorId, summary, orgId = process.en
     messaging_product: "whatsapp",
     to: normalizePhoneNumber(donor.whatsapp_number).replace("+", ""),
     type: "template",
-    template: { name: "guarida_donor_update", language: { code: "en_US" }, components: [{ type: "body", parameters: bodyParams.map((text) => ({ type: "text", text })) }] },
+    template: { name: "guarida_donor_update_v2", language: { code: "en_US" }, components: [{ type: "body", parameters: bodyParams.map((text) => ({ type: "text", text })) }] },
   });
 
   await logWhatsAppMessage(supabase, {
     orgId, personId: null, direction: "outbound",
     fromNumber: process.env.META_WHATSAPP_PHONE_NUMBER_ID, toNumber: normalizePhoneNumber(donor.whatsapp_number),
-    body: bodyParams.join(" | "), providerMessageId, messageType: "donor_update", templateName: "guarida_donor_update",
+    body: bodyParams.join(" | "), providerMessageId, messageType: "donor_update", templateName: "guarida_donor_update_v2",
   });
 
   return { providerMessageId, donor };
