@@ -9,8 +9,7 @@ import { supabase } from "../../lib/supabase-client";
 // Internal admin-facing summary of a case's real costs — "the memory of
 // every case and its expenses" the founder described, for reference when
 // talking to donors/investors, not a donor-facing portal itself. No case
-// detail page exists yet, so this uses the same case-selector pattern as
-// /authority-report rather than inventing one.
+// detail page exists yet, so this uses its own case-selector pattern.
 //
 // Scope note: this shows case-level expense totals only. Whether a
 // specific donor's contribution funded a specific case (donor earmarking)

@@ -1,3 +1,36 @@
+# Authority-reporting compiler — REMOVED 2026-07-22
+
+**Feature removed entirely, per the founder's direct correction:** neither
+Guarida nor Wet Noses ever files with authorities — only members of the
+public do, on their own. The `/authority-report` page, its "mark as
+reported" action, and the two supporting JS helpers
+(`myPersonProfile()`, `uploadAuthorityReportEvidence()`) were deleted from
+the app (commit pending at removal time — see git log for the exact SHA).
+The case record itself (notes, evidence, vet recommendations, legal
+citations) is untouched by this removal.
+
+**Table drop — verified safe, not yet executed (needs manual run):**
+confirmed live against Supabase before removal — `case_authority_reports`
+has zero rows, and no other table in the schema has a foreign key
+pointing into it (checked via the project's PostgREST OpenAPI
+definitions — only the table's own self-reference exists). This sandbox
+has no direct Postgres/DATABASE_URL access, only the REST API, so the
+actual `DROP TABLE` needs to be run manually via Supabase's SQL editor:
+
+```sql
+drop table if exists case_authority_reports;
+```
+
+A public-facing explainer (helping members of the public know how to
+report to authorities themselves) was explicitly out of scope for this
+removal — a separate future task if wanted.
+
+---
+
+*Everything below this line is the original build spec, kept for
+historical reference only — the feature it describes no longer exists
+in the app.*
+
 # Authority-reporting compiler — schema (v2, general-purpose)
 
 Spec for "Guarida - Direct Instructions for CC" (created 2026-07-22T07:33:50Z),

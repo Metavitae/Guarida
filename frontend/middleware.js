@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
 // Gates /case-intake, /donors, /vet-care, /inventory, /expenses,
-// /cross-border, /authority-report to active admin/staff/vet workers, and /legal-review to
+// /cross-border to active admin/staff/vet workers, and /legal-review to
 // admin/legal_reviewer specifically (a narrower, separate role - a
 // legal_reviewer should never pass the general worker check, and general
 // workers who aren't admin should never pass the legal-review check).
@@ -81,7 +81,7 @@ export const config = {
   matcher: [
     "/case-intake/:path*", "/donors/:path*", "/vet-care/:path*",
     "/inventory/:path*", "/expenses/:path*", "/cross-border/:path*",
-    "/legal-review/:path*", "/authority-report/:path*", "/fosters/:path*",
+    "/legal-review/:path*", "/fosters/:path*",
     "/case-expenses/:path*", "/prospects/:path*",
   ],
 };
