@@ -1,5 +1,24 @@
 # Guarida — Legal Reference Dataset (Draft v1)
 
+**Update 2026-07-22:** this file no longer matches the live table
+verbatim — the SQL seed below was the original v1 insert. Since then,
+the two Nayarit entries (`CPN Art. 422`, `CPN Art. 423`) were updated
+in place directly against Supabase with richer, cross-referenced
+research (denuncia process detail, penalty-range ambiguity fully
+sourced, ownership-forfeiture and custody-petition detail), and a new
+municipal entry was added: `Reglamento de Tenencia Responsable y
+Protección de Animales Domésticos y de Compañía del Municipio de
+Bahía de Banderas`, deliberately tagged `jurisdiction: 'MX-Nayarit'`
+(not a separate municipal jurisdiction value) — the app's suggestion
+engine (`suggestLegalMatches()` in `lib/supabase-client.js`) does an
+exact-match query on a single hardcoded jurisdiction string
+(`"MX-Nayarit"`, set in case-intake), so a different jurisdiction
+label would have made the entry permanently unreachable by the actual
+matching logic. The municipal/state distinction is preserved in the
+entry's own title/citation text instead. See `legal_references` in
+Supabase directly for current content; this file is historical
+context for the v1 seed, not a live mirror going forward.
+
 **Every entry below is `lawyer_reviewed: false`.** This is a starting point
 for the case-intake module's suggestion engine, sourced from real statute
 text and legal-summary sites, not verified by an actual attorney licensed

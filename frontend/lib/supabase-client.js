@@ -48,6 +48,10 @@ const EN_KEYWORDS_BY_STATUTE = {
   "Ley de Protección a la Fauna para el Estado de Nayarit, Art. 71": [
     "duty to report", "obligation to report", "witness", "report to authorities",
   ],
+  "Reglamento de Tenencia Responsable y Protección de Animales Domésticos y de Compañía del Municipio de Bahía de Banderas": [
+    "municipal", "municipality", "complaint", "report", "hotline", "animal control",
+    "seizure", "arrest", "fine", "community service", "Bahia de Banderas", "Punta de Mita",
+  ],
 };
 
 // Real version of the suggestLegalMatches logic from case-intake.js,
