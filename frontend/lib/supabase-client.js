@@ -81,3 +81,48 @@ export async function suggestLegalMatches(description, jurisdiction) {
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
 }
+
+// Caller's own profile, for defaulting the authority-report's reporter
+// fields. Goes through my_person_profile() (a narrow security-definer RPC)
+// instead of `select * from people` — that table's own RLS policy still
+// has the unfixed recursion bug flagged in docs/inventory-accounting-schema.md.
+export async function myPersonProfile() {
+  const client = requireSupabase();
+  const { data, error } = await client.rpc("my_person_profile");
+  if (error) throw error;
+  return data?.[0] ?? null;
+}
+
+// Uploads one evidence file for the authority-reporting compiler, reusing
+// the existing case_photos table + case-photos bucket rather than building
+// separate storage logic. Returns the new case_photos row's id, which the
+// caller appends to case_authority_reports.evidence_photo_ids.
+export async function uploadAuthorityReportEvidence(file, { orgId, caseId }) {
+  const client = requireSupabase();
+
+  const { data: personId, error: personErr } = await client.rpc("my_person_id");
+  if (personErr) throw personErr;
+
+  const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
+  const photoId = crypto.randomUUID();
+  const storagePath = `org-${orgId}/case-${caseId}/${photoId}.${ext}`;
+
+  const { error: uploadErr } = await client.storage.from("case-photos").upload(storagePath, file);
+  if (uploadErr) throw uploadErr;
+
+  const { data: row, error: insertErr } = await client
+    .from("case_photos")
+    .insert({
+      id: photoId,
+      org_id: orgId,
+      case_id: caseId,
+      storage_path: storagePath,
+      photo_type: "authority_report",
+      uploaded_by: personId,
+    })
+    .select()
+    .single();
+  if (insertErr) throw insertErr;
+
+  return row;
+}
