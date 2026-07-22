@@ -79,6 +79,6 @@ export const config = {
   matcher: [
     "/case-intake/:path*", "/donors/:path*", "/vet-care/:path*",
     "/inventory/:path*", "/expenses/:path*", "/cross-border/:path*",
-    "/legal-review/:path*", "/authority-report/:path*",
+    "/legal-review/:path*", "/authority-report/:path*", "/fosters/:path*",
   ],
 };

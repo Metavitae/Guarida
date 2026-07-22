@@ -60,6 +60,19 @@ export async function POST(request) {
         orgId, personId: result?.person?.id ?? null, direction: "inbound",
         fromNumber: from, body, providerMessageId: msg.id,
       });
+
+      // Foster check-in replies: any inbound message from someone with
+      // an active foster_placements row updates the check-in fields on
+      // it. "needs attention" (case-insensitive) also flags it — simple
+      // keyword match, matching exactly what the check-in template
+      // itself prompts the foster to reply with, per the task's own
+      // "don't build a full triage system" instruction.
+      if (result?.person?.id) {
+        const needsAttention = /needs attention/i.test(body);
+        await supabase.from("foster_placements")
+          .update({ last_checkin_at: new Date().toISOString(), last_checkin_note: body, ...(needsAttention ? { needs_attention: true } : {}) })
+          .eq("foster_person_id", result.person.id).eq("status", "active");
+      }
     }
 
     // Delivery-status callbacks for messages we sent (sent/delivered/read/
