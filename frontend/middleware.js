@@ -47,16 +47,18 @@ export async function middleware(request) {
   }
 
   const isLegalReviewRoute = request.nextUrl.pathname.startsWith("/legal-review");
-  const routeRpc = isLegalReviewRoute ? "can_review_legal" : "is_active_worker";
+  const isDonorsRoute = request.nextUrl.pathname.startsWith("/donors");
+  const routeRpc = isLegalReviewRoute ? "can_review_legal" : isDonorsRoute ? "is_admin_or_staff" : "is_active_worker";
   const { data: hasRouteAccess } = await supabase.rpc(routeRpc);
 
   if (!hasRouteAccess) {
     // Before treating this as a revoked/invalid account, check whether they
     // have ANY recognized active role at all. A legal_reviewer hitting
     // /inventory (or an admin/staff/vet hitting /legal-review without being
-    // admin) is just the wrong page for their role, not an account problem
-    // - don't force them to re-login over that. Only sign out when neither
-    // check passes, i.e. their account genuinely has no active role.
+    // admin, or a vet hitting /donors without being admin/staff) is just
+    // the wrong page for their role, not an account problem - don't force
+    // them to re-login over that. Only sign out when neither check passes,
+    // i.e. their account genuinely has no active role.
     const [{ data: isWorker }, { data: isReviewer }] = await Promise.all([
       supabase.rpc("is_active_worker"),
       supabase.rpc("can_review_legal"),
@@ -80,5 +82,6 @@ export const config = {
     "/case-intake/:path*", "/donors/:path*", "/vet-care/:path*",
     "/inventory/:path*", "/expenses/:path*", "/cross-border/:path*",
     "/legal-review/:path*", "/authority-report/:path*", "/fosters/:path*",
+    "/case-expenses/:path*",
   ],
 };

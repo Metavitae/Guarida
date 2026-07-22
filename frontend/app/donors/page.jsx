@@ -1,21 +1,14 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Heart, Home, TrendingUp, DollarSign, Circle, PawPrint } from "lucide-react";
+import { Heart, Home, PawPrint, Circle, Plus, ChevronDown, Check } from "lucide-react";
 import Nav from "../../components/Nav";
-import { COLORS, FONTS, FONT_IMPORT } from "../../lib/design-tokens";
+import { COLORS, FONTS, FONT_IMPORT, inputStyle } from "../../lib/design-tokens";
+import { supabase } from "../../lib/supabase-client";
 
-// Still demo-only: local state + hardcoded sample data, not wired to
-// Supabase. That's a separate future task (per the standing instruction
-// not to wire this pass to the real database).
-const donors = [
-  { name: "Jane Whitfield", stage: "active", total: 4200, currency: "MXN", lastGift: "3 days ago" },
-  { name: "Ricardo Almanza", stage: "active", total: 12500, currency: "MXN", lastGift: "1 week ago" },
-  { name: "Coastal Paws Foundation", stage: "active", total: 38000, currency: "MXN", lastGift: "2 weeks ago" },
-  { name: "Laura Kim", stage: "contacted", total: 0, currency: "MXN", lastGift: "—" },
-  { name: "Marcos Villanueva", stage: "prospect", total: 0, currency: "MXN", lastGift: "—" },
-];
-
+// "fosters" tab is still demo-only, unrelated to this task (real foster
+// data now lives at /fosters, built separately). "donors" tab below is
+// real, wired to Supabase — admin/staff only, per middleware.js.
 const fosters = [
   { animal: "Luna", species: "dog", foster: "Ana Ruiz", since: "Jun 14", status: "active" },
   { animal: "Pinto", species: "dog", foster: "The Hendersons", since: "May 28", status: "active" },
@@ -23,19 +16,84 @@ const fosters = [
   { animal: "Sunny", species: "wildlife", foster: "—", since: "—", status: "needs placement" },
 ];
 
-const stageColor = { active: COLORS.green, contacted: COLORS.marigold, prospect: `${COLORS.ink}55` };
+const stageColor = { prospect: `${COLORS.ink}55`, contacted: COLORS.marigold, active: COLORS.green, lapsed: COLORS.coral };
 
-function StatCard({ icon: Icon, label, value, sub, color }) {
+function DonorCard({ donor, onSave }) {
+  const [expanded, setExpanded] = useState(false);
+  const [draft, setDraft] = useState(donor);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => setDraft(donor), [donor]);
+
+  async function handleSave() {
+    setSaving(true);
+    await onSave(donor.id, { name: draft.name, contact: draft.contact, donor_type: draft.donor_type, stage: draft.stage, notes: draft.notes });
+    setSaving(false);
+  }
+
   return (
-    <div style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-2xl p-5 flex-1">
-      <div style={{ backgroundColor: `${color}18`, color }} className="h-9 w-9 rounded-xl flex items-center justify-center mb-4">
-        <Icon size={16} strokeWidth={2} />
-      </div>
-      <div style={{ fontFamily: FONTS.display, color: COLORS.ink }} className="text-2xl mb-1">
-        {value}
-      </div>
-      <div style={{ color: `${COLORS.ink}88` }} className="text-xs">
-        {label} {sub && <span style={{ color }}>· {sub}</span>}
+    <div style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-xl overflow-hidden">
+      <button onClick={() => setExpanded(!expanded)} className="w-full px-5 py-4 flex items-center gap-4 text-left">
+        <div style={{ backgroundColor: `${stageColor[donor.stage]}18` }} className="h-9 w-9 rounded-full flex items-center justify-center shrink-0">
+          <Heart size={14} color={stageColor[donor.stage]} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div style={{ color: COLORS.ink }} className="text-sm font-medium">{donor.name}</div>
+          <div style={{ color: `${COLORS.ink}77` }} className="text-xs flex items-center gap-1.5">
+            <Circle size={6} fill={stageColor[donor.stage]} color={stageColor[donor.stage]} />
+            <span className="capitalize">{donor.stage}</span> · <span className="capitalize">{donor.donor_type}</span>
+          </div>
+        </div>
+        <ChevronDown size={16} color={`${COLORS.ink}66`} style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+      </button>
+
+      {expanded && (
+        <div style={{ borderTop: `1.5px solid ${COLORS.line}` }} className="px-5 py-5 space-y-3">
+          <input value={draft.name || ""} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="Name" style={inputStyle} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
+          <input value={draft.contact || ""} onChange={(e) => setDraft({ ...draft, contact: e.target.value })} placeholder="Contact (email / phone / WhatsApp)" style={inputStyle} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
+          <div className="grid grid-cols-2 gap-3">
+            <select value={draft.donor_type || "prospect"} onChange={(e) => setDraft({ ...draft, donor_type: e.target.value })} style={inputStyle} className="rounded-xl px-3 py-2 text-sm outline-none">
+              {["prospect", "donor", "investor"].map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <select value={draft.stage || "prospect"} onChange={(e) => setDraft({ ...draft, stage: e.target.value })} style={inputStyle} className="rounded-xl px-3 py-2 text-sm outline-none">
+              {["prospect", "contacted", "active", "lapsed"].map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <textarea value={draft.notes || ""} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} placeholder="Notes" style={inputStyle} className="w-full rounded-xl px-3 py-2 text-sm outline-none min-h-20 resize-none" />
+          <button onClick={handleSave} disabled={saving} style={{ backgroundColor: COLORS.teal, color: "#FFFFFF" }} className="rounded-full px-4 py-2 text-sm font-medium flex items-center gap-1.5">
+            <Check size={13} /> {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NewDonorForm({ onAdd, onCancel }) {
+  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
+  const [donorType, setDonorType] = useState("prospect");
+  const [adding, setAdding] = useState(false);
+
+  async function handleAdd() {
+    if (!name.trim()) return;
+    setAdding(true);
+    await onAdd({ name: name.trim(), contact, donor_type: donorType, stage: "prospect" });
+    setAdding(false);
+  }
+
+  return (
+    <div style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.teal}` }} className="rounded-xl px-5 py-4 space-y-3 mb-2">
+      <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" style={inputStyle} className="w-full rounded-xl px-3 py-2 text-sm outline-none" autoFocus />
+      <input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Contact (email / phone / WhatsApp)" style={inputStyle} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
+      <select value={donorType} onChange={(e) => setDonorType(e.target.value)} style={inputStyle} className="rounded-xl px-3 py-2 text-sm outline-none">
+        {["prospect", "donor", "investor"].map((t) => <option key={t} value={t}>{t}</option>)}
+      </select>
+      <div className="flex items-center gap-2">
+        <button onClick={handleAdd} disabled={adding || !name.trim()} style={{ backgroundColor: COLORS.coral, color: "#FFFFFF" }} className="rounded-full px-4 py-2 text-sm font-medium">
+          {adding ? "Adding…" : "Add donor"}
+        </button>
+        <button onClick={onCancel} style={{ color: `${COLORS.ink}77` }} className="text-sm px-3 py-2">Cancel</button>
       </div>
     </div>
   );
@@ -43,6 +101,41 @@ function StatCard({ icon: Icon, label, value, sub, color }) {
 
 export default function DonorsPage() {
   const [tab, setTab] = useState("donors");
+  const [donors, setDonors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [orgId, setOrgId] = useState(null);
+
+  const load = useCallback(async () => {
+    if (!supabase) { setError("Supabase isn't configured."); setLoading(false); return; }
+    const { data: memberships } = await supabase.from("memberships").select("org_id").eq("status", "active").limit(1);
+    setOrgId(memberships?.[0]?.org_id ?? null);
+
+    const { data, error: err } = await supabase.from("donors").select("*").order("name");
+    if (err) { setError(err.message); setLoading(false); return; }
+    setDonors(data ?? []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function handleAdd(fields) {
+    setError("");
+    const { error: err } = await supabase.from("donors").insert({ ...fields, org_id: orgId });
+    if (err) { setError(err.message); return; }
+    setAdding(false);
+    load();
+  }
+
+  async function handleSave(id, fields) {
+    setError("");
+    const { error: err } = await supabase.from("donors").update(fields).eq("id", id);
+    if (err) { setError(err.message); return; }
+    load();
+  }
+
+  const activeCount = donors.filter((d) => d.stage === "active").length;
 
   return (
     <div style={{ backgroundColor: COLORS.paper, minHeight: "100vh", fontFamily: FONTS.body }}>
@@ -50,72 +143,51 @@ export default function DonorsPage() {
       <Nav crumb="Community" />
 
       <div className="max-w-3xl mx-auto px-6 py-12">
-        <h1 style={{ fontFamily: FONTS.display, color: COLORS.ink }} className="text-3xl mb-8">
-          Community
-        </h1>
-
-        <div className="flex gap-4 mb-10">
-          <StatCard icon={DollarSign} label="raised this month" value="$54,700" sub="MXN" color={COLORS.coral} />
-          <StatCard icon={Home} label="animals in foster care" value="3" sub="1 needs placement" color={COLORS.marigold} />
-          <StatCard icon={TrendingUp} label="active donors" value="3" sub="+1 this week" color={COLORS.green} />
+        <div className="flex items-baseline justify-between mb-8">
+          <h1 style={{ fontFamily: FONTS.display, color: COLORS.ink }} className="text-3xl">Community</h1>
+          {tab === "donors" && (
+            <span style={{ color: `${COLORS.ink}77`, fontFamily: FONTS.mono }} className="text-xs">{activeCount} active · {donors.length} total</span>
+          )}
         </div>
 
         <div className="flex gap-1 mb-6" style={{ borderBottom: `1.5px solid ${COLORS.line}` }}>
           {["donors", "fosters"].map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              style={{
-                color: tab === t ? COLORS.coral : `${COLORS.ink}77`,
-                borderBottom: tab === t ? `2px solid ${COLORS.coral}` : "2px solid transparent",
-              }}
-              className="px-4 py-3 text-sm font-medium capitalize -mb-px transition-colors"
-            >
+            <button key={t} onClick={() => setTab(t)}
+              style={{ color: tab === t ? COLORS.coral : `${COLORS.ink}77`, borderBottom: tab === t ? `2px solid ${COLORS.coral}` : "2px solid transparent" }}
+              className="px-4 py-3 text-sm font-medium capitalize -mb-px transition-colors">
               {t}
             </button>
           ))}
         </div>
 
+        {error && (
+          <div style={{ backgroundColor: `${COLORS.coral}12`, border: `1px solid ${COLORS.coral}44`, color: COLORS.ink }} className="rounded-xl px-4 py-3 mb-6 text-sm">{error}</div>
+        )}
+
         {tab === "donors" && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
-            {donors.map((d) => (
-              <div
-                key={d.name}
-                style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }}
-                className="rounded-xl px-5 py-4 flex items-center gap-4"
-              >
-                <div style={{ backgroundColor: `${stageColor[d.stage]}18` }} className="h-9 w-9 rounded-full flex items-center justify-center shrink-0">
-                  <Heart size={14} color={stageColor[d.stage]} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div style={{ color: COLORS.ink }} className="text-sm font-medium">{d.name}</div>
-                  <div style={{ color: `${COLORS.ink}77` }} className="text-xs flex items-center gap-1.5">
-                    <Circle size={6} fill={stageColor[d.stage]} color={stageColor[d.stage]} />
-                    <span className="capitalize">{d.stage}</span>
-                    {d.lastGift !== "—" && <span>· last gift {d.lastGift}</span>}
-                  </div>
-                </div>
-                {d.total > 0 && (
-                  <div style={{ fontFamily: FONTS.mono, color: COLORS.ink }} className="text-sm shrink-0">
-                    ${d.total.toLocaleString()} {d.currency}
-                  </div>
-                )}
-              </div>
-            ))}
+            {!adding ? (
+              <button onClick={() => setAdding(true)} style={{ border: `1.5px dashed ${COLORS.line}`, color: `${COLORS.ink}88` }} className="w-full rounded-xl px-4 py-3 text-sm flex items-center justify-center gap-2 mb-2">
+                <Plus size={14} /> Add donor
+              </button>
+            ) : (
+              <NewDonorForm onAdd={handleAdd} onCancel={() => setAdding(false)} />
+            )}
+
+            {loading ? (
+              <p style={{ color: `${COLORS.ink}77` }} className="text-sm">Loading…</p>
+            ) : donors.length === 0 ? (
+              <p style={{ color: `${COLORS.ink}77` }} className="text-sm">No donors yet.</p>
+            ) : (
+              donors.map((d) => <DonorCard key={d.id} donor={d} onSave={handleSave} />)
+            )}
           </motion.div>
         )}
 
         {tab === "fosters" && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
             {fosters.map((f) => (
-              <div
-                key={f.animal}
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  border: `1.5px solid ${f.status === "needs placement" ? COLORS.coral : COLORS.line}`,
-                }}
-                className="rounded-xl px-5 py-4 flex items-center gap-4"
-              >
+              <div key={f.animal} style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${f.status === "needs placement" ? COLORS.coral : COLORS.line}` }} className="rounded-xl px-5 py-4 flex items-center gap-4">
                 <div style={{ backgroundColor: `${COLORS.teal}18` }} className="h-9 w-9 rounded-full flex items-center justify-center shrink-0">
                   <PawPrint size={14} color={COLORS.teal} />
                 </div>
@@ -124,21 +196,9 @@ export default function DonorsPage() {
                     {f.animal} <span style={{ color: `${COLORS.ink}66` }} className="font-normal capitalize">· {f.species}</span>
                   </div>
                   <div style={{ color: `${COLORS.ink}77` }} className="text-xs">
-                    {f.status === "needs placement" ? (
-                      <span style={{ color: COLORS.coral }}>Needs a foster placement</span>
-                    ) : (
-                      <>with {f.foster} · since {f.since}</>
-                    )}
+                    {f.status === "needs placement" ? <span style={{ color: COLORS.coral }}>Needs a foster placement</span> : <>with {f.foster} · since {f.since}</>}
                   </div>
                 </div>
-                {f.status === "needs placement" && (
-                  <button
-                    style={{ backgroundColor: COLORS.coral, color: "#FFFFFF" }}
-                    className="text-xs px-3 py-2 rounded-full shrink-0 font-medium"
-                  >
-                    Assign
-                  </button>
-                )}
               </div>
             ))}
           </motion.div>
