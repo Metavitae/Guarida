@@ -91,7 +91,7 @@ export default function CaseIntakePage() {
       // from the client instead of a server script.
       const { data: caseRow, error } = await supabase
         .from("cases")
-        .insert({ title, description, species, location, jurisdiction: "MX-Nayarit", status: "open" })
+        .insert({ title, description, species, location, jurisdiction: "MX-Nayarit", status: "open", needs_vet_care: requiresVet })
         .select()
         .single();
       if (error) { console.error(error); return; }

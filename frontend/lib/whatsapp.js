@@ -69,16 +69,17 @@ export async function getActiveMembership(supabase, phoneNumber, orgId) {
   return { person, membership };
 }
 
-export async function logWhatsAppMessage(supabase, { orgId, personId, direction, fromNumber, toNumber, body, providerMessageId }) {
+export async function logWhatsAppMessage(supabase, { orgId, personId, direction, fromNumber, toNumber, body, providerMessageId, messageType, templateName }) {
   const { error } = await supabase.from("whatsapp_messages").insert({
     org_id: orgId, person_id: personId ?? null, direction,
     from_number: fromNumber ?? null, to_number: toNumber ?? null,
     body: body ?? null, provider_message_id: providerMessageId ?? null,
+    message_type: messageType ?? "chatter", template_name: templateName ?? null,
   });
   if (error) console.error("Failed to log whatsapp message:", error.message);
 }
 
-async function sendViaMeta(toNumber, body) {
+async function callMetaSend(payload) {
   const token = process.env.META_WHATSAPP_TOKEN;
   const phoneNumberId = process.env.META_WHATSAPP_PHONE_NUMBER_ID;
   if (!token || !phoneNumberId) throw new Error("Missing META_WHATSAPP_TOKEN / META_WHATSAPP_PHONE_NUMBER_ID.");
@@ -86,22 +87,15 @@ async function sendViaMeta(toNumber, body) {
   const res = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to: normalizePhoneNumber(toNumber).replace("+", ""),
-      type: "text",
-      text: { body },
-    }),
+    body: JSON.stringify(payload),
   });
   const json = await res.json();
   if (!res.ok) throw new Error(`Meta send failed: ${JSON.stringify(json)}`);
   return { providerMessageId: json.messages?.[0]?.id };
 }
 
-// Outbound — call this from anywhere else in the app (vet notification,
-// case update, etc.). Runs the same active-membership check as inbound
-// before sending anything.
-export async function sendWhatsAppMessage(toPersonPhone, body, orgId = process.env.PILOT_ORG_ID) {
+// Shared by both send paths below: same kill-switch, same logging shape.
+async function sendChecked(toPersonPhone, orgId, buildPayload, { body, messageType, templateName }) {
   const supabase = getSupabaseAdmin();
   const result = await getActiveMembership(supabase, toPersonPhone, orgId);
   if (!result) {
@@ -110,13 +104,45 @@ export async function sendWhatsAppMessage(toPersonPhone, body, orgId = process.e
 
   const provider = process.env.WHATSAPP_PROVIDER || "meta";
   if (provider !== "meta") throw new Error(`Unsupported WHATSAPP_PROVIDER: ${provider}`);
-  const { providerMessageId } = await sendViaMeta(toPersonPhone, body);
+  const { providerMessageId } = await callMetaSend(buildPayload(toPersonPhone));
 
   await logWhatsAppMessage(supabase, {
     orgId, personId: result.person.id, direction: "outbound",
     fromNumber: process.env.META_WHATSAPP_PHONE_NUMBER_ID, toNumber: normalizePhoneNumber(toPersonPhone),
-    body, providerMessageId,
+    body, providerMessageId, messageType, templateName,
   });
 
   return { providerMessageId, person: result.person };
+}
+
+// Free-form text — only works within an open 24-hour customer-service
+// window (WhatsApp policy, confirmed the hard way tonight). Fine for
+// replying to an active conversation; NOT for business-initiated notices.
+export async function sendWhatsAppMessage(toPersonPhone, body, orgId = process.env.PILOT_ORG_ID) {
+  return sendChecked(
+    toPersonPhone, orgId,
+    (to) => ({ messaging_product: "whatsapp", to: normalizePhoneNumber(to).replace("+", ""), type: "text", text: { body } }),
+    { body, messageType: "chatter" }
+  );
+}
+
+// Template — the only path allowed for business-initiated messages
+// outside an open window (e.g. a vet-care notice to a foster who hasn't
+// messaged the number). bodyParams fills the template's {{1}}, {{2}}, ...
+// placeholders in order.
+export async function sendWhatsAppTemplate(toPersonPhone, templateName, languageCode, bodyParams, orgId = process.env.PILOT_ORG_ID, messageType = "template") {
+  return sendChecked(
+    toPersonPhone, orgId,
+    (to) => ({
+      messaging_product: "whatsapp",
+      to: normalizePhoneNumber(to).replace("+", ""),
+      type: "template",
+      template: {
+        name: templateName,
+        language: { code: languageCode },
+        components: [{ type: "body", parameters: bodyParams.map((text) => ({ type: "text", text })) }],
+      },
+    }),
+    { body: bodyParams.join(" | "), messageType, templateName }
+  );
 }
