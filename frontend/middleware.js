@@ -47,7 +47,7 @@ export async function middleware(request) {
   }
 
   const isLegalReviewRoute = request.nextUrl.pathname.startsWith("/legal-review");
-  const isDonorsRoute = request.nextUrl.pathname.startsWith("/donors");
+  const isDonorsRoute = request.nextUrl.pathname.startsWith("/donors") || request.nextUrl.pathname.startsWith("/prospects");
   const routeRpc = isLegalReviewRoute ? "can_review_legal" : isDonorsRoute ? "is_admin_or_staff" : "is_active_worker";
   const { data: hasRouteAccess } = await supabase.rpc(routeRpc);
 
@@ -82,6 +82,6 @@ export const config = {
     "/case-intake/:path*", "/donors/:path*", "/vet-care/:path*",
     "/inventory/:path*", "/expenses/:path*", "/cross-border/:path*",
     "/legal-review/:path*", "/authority-report/:path*", "/fosters/:path*",
-    "/case-expenses/:path*",
+    "/case-expenses/:path*", "/prospects/:path*",
   ],
 };
