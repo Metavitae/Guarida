@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Stethoscope, Clock, Check, Send, Users, ChevronDown, AlertCircle } from "lucide-react";
 import Nav from "../../components/Nav";
+import Reveal from "../../components/Reveal";
 import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
 import { supabase } from "../../lib/supabase-client";
 
@@ -171,8 +172,10 @@ export default function VetCarePage() {
           <p style={{ color: `${COLORS.ink}77` }} className="text-sm">No cases currently flagged for vet care.</p>
         ) : (
           <div className="space-y-3">
-            {cases.map((c) => (
-              <CaseCard key={c.id} c={c} onAcknowledge={acknowledge} onSavePlan={savePlan} onSend={sendNotice} />
+            {cases.map((c, i) => (
+              <Reveal key={c.id} delay={Math.min(i, 5) * 0.03}>
+                <CaseCard c={c} onAcknowledge={acknowledge} onSavePlan={savePlan} onSend={sendNotice} />
+              </Reveal>
             ))}
           </div>
         )}

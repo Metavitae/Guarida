@@ -6,6 +6,7 @@ import {
   Plus, Stethoscope, ScrollText,
 } from "lucide-react";
 import Nav from "../../components/Nav";
+import Reveal from "../../components/Reveal";
 import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
 import { supabase, suggestLegalMatches as suggestLegalMatchesReal } from "../../lib/supabase-client";
 
@@ -116,74 +117,88 @@ export default function CaseIntakePage() {
           Everything here becomes part of the case's permanent record.
         </p>
 
-        <Field label="Short title">
-          <input style={inputStyle} className="w-full rounded-xl px-4 py-3 text-sm outline-none"
-            placeholder="e.g. Perro con golpes visibles, Punta de Mita"
-            value={title} onChange={(e) => setTitle(e.target.value)} />
-        </Field>
+        <Reveal>
+          <Field label="Short title">
+            <input style={inputStyle} className="w-full rounded-xl px-4 py-3 text-sm outline-none"
+              placeholder="e.g. Perro con golpes visibles, Punta de Mita"
+              value={title} onChange={(e) => setTitle(e.target.value)} />
+          </Field>
+        </Reveal>
 
-        <Field label="Species">
-          <div className="flex gap-2">
-            {["dog", "cat", "wildlife", "other"].map((s) => (
-              <button key={s} onClick={() => setSpecies(s)}
-                style={{
-                  backgroundColor: species === s ? COLORS.coral : "#FFFFFF",
-                  color: species === s ? "#FFFFFF" : COLORS.ink,
-                  border: `1.5px solid ${species === s ? COLORS.coral : COLORS.line}`,
-                }}
-                className="px-4 py-2 rounded-full text-sm capitalize transition-colors">
-                {s}
-              </button>
-            ))}
-          </div>
-        </Field>
+        <Reveal delay={0.03}>
+          <Field label="Species">
+            <div className="flex gap-2">
+              {["dog", "cat", "wildlife", "other"].map((s) => (
+                <button key={s} onClick={() => setSpecies(s)}
+                  style={{
+                    backgroundColor: species === s ? COLORS.coral : "#FFFFFF",
+                    color: species === s ? "#FFFFFF" : COLORS.ink,
+                    border: `1.5px solid ${species === s ? COLORS.coral : COLORS.line}`,
+                  }}
+                  className="px-4 py-2 rounded-full text-sm capitalize transition-colors">
+                  {s}
+                </button>
+              ))}
+            </div>
+          </Field>
+        </Reveal>
 
-        <Field label="Description">
-          <textarea style={inputStyle} className="w-full rounded-xl px-4 py-3 text-sm outline-none min-h-32 resize-none"
-            placeholder="Describe lo que se reportó — entre más detalle, mejor puede el sistema sugerir la ley aplicable."
-            value={description} onChange={(e) => setDescription(e.target.value)} />
-        </Field>
+        <Reveal delay={0.06}>
+          <Field label="Description">
+            <textarea style={inputStyle} className="w-full rounded-xl px-4 py-3 text-sm outline-none min-h-32 resize-none"
+              placeholder="Describe lo que se reportó — entre más detalle, mejor puede el sistema sugerir la ley aplicable."
+              value={description} onChange={(e) => setDescription(e.target.value)} />
+          </Field>
+        </Reveal>
 
-        <Field label="Location">
-          <div style={inputStyle} className="w-full rounded-xl px-4 py-3 text-sm flex items-center gap-2">
-            <MapPin size={16} color={COLORS.teal} />
-            <input className="flex-1 outline-none bg-transparent" placeholder="Colonia, calle, punto de referencia"
-              value={location} onChange={(e) => setLocation(e.target.value)} />
-          </div>
-        </Field>
+        <Reveal delay={0.09}>
+          <Field label="Location">
+            <div style={inputStyle} className="w-full rounded-xl px-4 py-3 text-sm flex items-center gap-2">
+              <MapPin size={16} color={COLORS.teal} />
+              <input className="flex-1 outline-none bg-transparent" placeholder="Colonia, calle, punto de referencia"
+                value={location} onChange={(e) => setLocation(e.target.value)} />
+            </div>
+          </Field>
+        </Reveal>
 
-        <Field label="Evidence">
-          <button style={{ border: `1.5px dashed ${COLORS.line}`, color: `${COLORS.ink}88` }}
-            className="w-full rounded-xl px-4 py-6 text-sm flex flex-col items-center gap-2">
-            <Camera size={20} color={COLORS.teal} /> Add photo or video
-          </button>
-        </Field>
-
-        <Field label="Witnesses">
-          <div className="space-y-3">
-            {witnesses.map((w, i) => (
-              <div key={i} className="flex gap-2">
-                <input style={inputStyle} className="flex-1 rounded-xl px-3 py-2 text-sm outline-none"
-                  placeholder="Nombre (opcional)" value={w.name} onChange={(e) => updateWitness(i, "name", e.target.value)} />
-                <input style={inputStyle} className="flex-1 rounded-xl px-3 py-2 text-sm outline-none"
-                  placeholder="Teléfono o WhatsApp" value={w.contact} onChange={(e) => updateWitness(i, "contact", e.target.value)} />
-              </div>
-            ))}
-            <button onClick={addWitness} style={{ color: COLORS.teal }} className="text-xs flex items-center gap-1 font-medium">
-              <Plus size={14} /> Add another witness
+        <Reveal delay={0.12}>
+          <Field label="Evidence">
+            <button style={{ border: `1.5px dashed ${COLORS.line}`, color: `${COLORS.ink}88` }}
+              className="w-full rounded-xl px-4 py-6 text-sm flex flex-col items-center gap-2">
+              <Camera size={20} color={COLORS.teal} /> Add photo or video
             </button>
-          </div>
-        </Field>
+          </Field>
+        </Reveal>
 
-        <button onClick={() => setRequiresVet(!requiresVet)}
-          style={{ backgroundColor: requiresVet ? `${COLORS.coral}18` : "#FFFFFF", border: `1.5px solid ${requiresVet ? COLORS.coral : COLORS.line}` }}
-          className="w-full rounded-xl px-4 py-3 mb-8 flex items-center gap-3 text-left">
-          <Stethoscope size={18} color={requiresVet ? COLORS.coral : `${COLORS.ink}66`} />
-          <span style={{ color: COLORS.ink }} className="text-sm flex-1">This case needs veterinary attention</span>
-          <div style={{ backgroundColor: requiresVet ? COLORS.coral : COLORS.line }} className="h-5 w-9 rounded-full relative transition-colors">
-            <motion.div animate={{ x: requiresVet ? 16 : 2 }} className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow" />
-          </div>
-        </button>
+        <Reveal delay={0.15}>
+          <Field label="Witnesses">
+            <div className="space-y-3">
+              {witnesses.map((w, i) => (
+                <div key={i} className="flex gap-2">
+                  <input style={inputStyle} className="flex-1 rounded-xl px-3 py-2 text-sm outline-none"
+                    placeholder="Nombre (opcional)" value={w.name} onChange={(e) => updateWitness(i, "name", e.target.value)} />
+                  <input style={inputStyle} className="flex-1 rounded-xl px-3 py-2 text-sm outline-none"
+                    placeholder="Teléfono o WhatsApp" value={w.contact} onChange={(e) => updateWitness(i, "contact", e.target.value)} />
+                </div>
+              ))}
+              <button onClick={addWitness} style={{ color: COLORS.teal }} className="text-xs flex items-center gap-1 font-medium">
+                <Plus size={14} /> Add another witness
+              </button>
+            </div>
+          </Field>
+        </Reveal>
+
+        <Reveal delay={0.18}>
+          <button onClick={() => setRequiresVet(!requiresVet)}
+            style={{ backgroundColor: requiresVet ? `${COLORS.coral}18` : "#FFFFFF", border: `1.5px solid ${requiresVet ? COLORS.coral : COLORS.line}` }}
+            className="w-full rounded-xl px-4 py-3 mb-8 flex items-center gap-3 text-left">
+            <Stethoscope size={18} color={requiresVet ? COLORS.coral : `${COLORS.ink}66`} />
+            <span style={{ color: COLORS.ink }} className="text-sm flex-1">This case needs veterinary attention</span>
+            <div style={{ backgroundColor: requiresVet ? COLORS.coral : COLORS.line }} className="h-5 w-9 rounded-full relative transition-colors">
+              <motion.div animate={{ x: requiresVet ? 16 : 2 }} className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow" />
+            </div>
+          </button>
+        </Reveal>
 
         <AnimatePresence>
           {matches.length > 0 && (

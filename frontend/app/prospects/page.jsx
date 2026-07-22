@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { UserPlus, Circle, ChevronDown, Check, ArrowRight, Plus } from "lucide-react";
 import Nav from "../../components/Nav";
+import Reveal from "../../components/Reveal";
 import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
 import { supabase } from "../../lib/supabase-client";
 
@@ -222,7 +223,7 @@ export default function ProspectsPage() {
           ) : visible.length === 0 ? (
             <p style={{ color: `${COLORS.ink}77` }} className="text-sm">No prospects match this filter.</p>
           ) : (
-            visible.map((p) => <ProspectCard key={p.id} p={p} onSave={handleSave} onConvert={handleConvert} />)
+            visible.map((p, i) => <Reveal key={p.id} delay={Math.min(i, 5) * 0.03}><ProspectCard p={p} onSave={handleSave} onConvert={handleConvert} /></Reveal>)
           )}
         </div>
       </div>

@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Home, Send, AlertCircle, Check, Clock } from "lucide-react";
 import Nav from "../../components/Nav";
+import Reveal from "../../components/Reveal";
 import { COLORS, FONTS } from "../../lib/design-tokens";
 import { supabase } from "../../lib/supabase-client";
 
@@ -123,7 +124,7 @@ export default function FostersPage() {
           <p style={{ color: `${COLORS.ink}77` }} className="text-sm">No active foster placements.</p>
         ) : (
           <div className="space-y-3">
-            {placements.map((p) => <PlacementCard key={p.id} p={p} onSend={sendCheckin} onResolve={resolveAttention} />)}
+            {placements.map((p, i) => <Reveal key={p.id} delay={Math.min(i, 5) * 0.03}><PlacementCard p={p} onSend={sendCheckin} onResolve={resolveAttention} /></Reveal>)}
           </div>
         )}
       </div>

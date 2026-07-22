@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Heart, Home, PawPrint, Circle, Plus, ChevronDown, Check, Send, AlertCircle } from "lucide-react";
 import Nav from "../../components/Nav";
+import Reveal from "../../components/Reveal";
 import { COLORS, FONTS, FONT_IMPORT, inputStyle } from "../../lib/design-tokens";
 import { supabase } from "../../lib/supabase-client";
 
@@ -207,7 +208,7 @@ export default function DonorsPage() {
             ) : donors.length === 0 ? (
               <p style={{ color: `${COLORS.ink}77` }} className="text-sm">No donors yet.</p>
             ) : (
-              donors.map((d) => <DonorCard key={d.id} donor={d} onSave={handleSave} />)
+              donors.map((d, i) => <Reveal key={d.id} delay={Math.min(i, 5) * 0.03}><DonorCard donor={d} onSave={handleSave} /></Reveal>)
             )}
           </motion.div>
         )}

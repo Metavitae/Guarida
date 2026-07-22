@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { DollarSign } from "lucide-react";
 import Nav from "../../components/Nav";
+import Reveal from "../../components/Reveal";
 import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
 import { supabase } from "../../lib/supabase-client";
 
@@ -142,24 +143,26 @@ export default function ExpensesPage() {
           <p style={{ color: `${COLORS.ink}77` }} className="text-sm">No expenses logged yet.</p>
         ) : (
           <div className="space-y-2">
-            {expenses.map((ex) => (
-              <div key={ex.id} style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-xl px-4 py-3 flex items-center gap-3">
-                <div style={{ backgroundColor: `${COLORS.coral}18` }} className="h-9 w-9 rounded-full flex items-center justify-center shrink-0">
-                  <DollarSign size={14} color={COLORS.coral} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div style={{ color: COLORS.ink }} className="text-sm font-medium">
-                    {ex.description || "(no note)"}
-                    {ex.category && <span style={{ color: `${COLORS.ink}66` }} className="font-normal capitalize"> · {ex.category}</span>}
+            {expenses.map((ex, i) => (
+              <Reveal key={ex.id} delay={Math.min(i, 5) * 0.03}>
+                <div style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-xl px-4 py-3 flex items-center gap-3">
+                  <div style={{ backgroundColor: `${COLORS.coral}18` }} className="h-9 w-9 rounded-full flex items-center justify-center shrink-0">
+                    <DollarSign size={14} color={COLORS.coral} />
                   </div>
-                  <div style={{ color: `${COLORS.ink}77` }} className="text-xs">
-                    {new Date(ex.created_at).toLocaleDateString()}
+                  <div className="flex-1 min-w-0">
+                    <div style={{ color: COLORS.ink }} className="text-sm font-medium">
+                      {ex.description || "(no note)"}
+                      {ex.category && <span style={{ color: `${COLORS.ink}66` }} className="font-normal capitalize"> · {ex.category}</span>}
+                    </div>
+                    <div style={{ color: `${COLORS.ink}77` }} className="text-xs">
+                      {new Date(ex.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div style={{ fontFamily: FONTS.mono, color: COLORS.ink }} className="text-sm shrink-0">
+                    {ex.amount.toLocaleString()} {ex.currency}
                   </div>
                 </div>
-                <div style={{ fontFamily: FONTS.mono, color: COLORS.ink }} className="text-sm shrink-0">
-                  {ex.amount.toLocaleString()} {ex.currency}
-                </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         )}

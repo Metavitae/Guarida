@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, ArrowDownCircle, ArrowUpCircle, Package } from "lucide-react";
 import Nav from "../../components/Nav";
+import Reveal from "../../components/Reveal";
 import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
 import { supabase } from "../../lib/supabase-client";
 
@@ -160,19 +161,21 @@ export default function InventoryPage() {
           <p style={{ color: `${COLORS.ink}77` }} className="text-sm mb-8">No items yet — add one above.</p>
         ) : (
           <div className="space-y-2 mb-10">
-            {items.map((it) => (
-              <div key={it.id} style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-xl px-4 py-3 flex items-center gap-3">
-                <div style={{ backgroundColor: `${COLORS.teal}18` }} className="h-9 w-9 rounded-full flex items-center justify-center shrink-0">
-                  <Package size={14} color={COLORS.teal} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div style={{ color: COLORS.ink }} className="text-sm font-medium">{it.name}</div>
-                  <div style={{ color: `${COLORS.ink}77` }} className="text-xs">
-                    {it.category && <span className="capitalize">{it.category} · </span>}
-                    {it.quantity} {it.unit || ""}
+            {items.map((it, i) => (
+              <Reveal key={it.id} delay={Math.min(i, 5) * 0.03}>
+                <div style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-xl px-4 py-3 flex items-center gap-3">
+                  <div style={{ backgroundColor: `${COLORS.teal}18` }} className="h-9 w-9 rounded-full flex items-center justify-center shrink-0">
+                    <Package size={14} color={COLORS.teal} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div style={{ color: COLORS.ink }} className="text-sm font-medium">{it.name}</div>
+                    <div style={{ color: `${COLORS.ink}77` }} className="text-xs">
+                      {it.category && <span className="capitalize">{it.category} · </span>}
+                      {it.quantity} {it.unit || ""}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         )}

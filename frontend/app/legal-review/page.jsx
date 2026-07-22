@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ChevronDown, Check, ScrollText } from "lucide-react";
 import Nav from "../../components/Nav";
+import Reveal from "../../components/Reveal";
 import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
 import { supabase } from "../../lib/supabase-client";
 
@@ -153,8 +154,10 @@ export default function LegalReviewPage() {
           <p style={{ color: `${COLORS.ink}77` }} className="text-sm">Loading…</p>
         ) : (
           <div className="space-y-2">
-            {entries.map((entry) => (
-              <EntryCard key={entry.id} entry={entry} onSave={handleSave} onMarkReviewed={handleMarkReviewed} />
+            {entries.map((entry, i) => (
+              <Reveal key={entry.id} delay={Math.min(i, 5) * 0.03}>
+                <EntryCard entry={entry} onSave={handleSave} onMarkReviewed={handleMarkReviewed} />
+              </Reveal>
             ))}
           </div>
         )}

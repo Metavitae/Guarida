@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Receipt, DollarSign } from "lucide-react";
 import Nav from "../../components/Nav";
+import Reveal from "../../components/Reveal";
 import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
 import { supabase } from "../../lib/supabase-client";
 
@@ -105,15 +106,17 @@ export default function CaseExpensesPage() {
 
             <div style={{ color: COLORS.ink, fontFamily: FONTS.mono }} className="text-xs uppercase tracking-wide mb-3">Line items</div>
             <div className="space-y-2">
-              {expenses.map((e) => (
-                <div key={e.id} style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-xl px-4 py-3 flex items-center gap-3">
-                  <Receipt size={14} color={COLORS.teal} className="shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div style={{ color: COLORS.ink }} className="text-sm">{e.description || e.category || "Expense"}</div>
-                    <div style={{ color: `${COLORS.ink}77` }} className="text-xs">{e.category && e.description ? e.category + " · " : ""}{new Date(e.created_at).toLocaleDateString()}</div>
+              {expenses.map((e, i) => (
+                <Reveal key={e.id} delay={Math.min(i, 5) * 0.03}>
+                  <div style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-xl px-4 py-3 flex items-center gap-3">
+                    <Receipt size={14} color={COLORS.teal} className="shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div style={{ color: COLORS.ink }} className="text-sm">{e.description || e.category || "Expense"}</div>
+                      <div style={{ color: `${COLORS.ink}77` }} className="text-xs">{e.category && e.description ? e.category + " · " : ""}{new Date(e.created_at).toLocaleDateString()}</div>
+                    </div>
+                    <div style={{ fontFamily: FONTS.mono, color: COLORS.ink }} className="text-sm shrink-0">{Number(e.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })} {e.currency}</div>
                   </div>
-                  <div style={{ fontFamily: FONTS.mono, color: COLORS.ink }} className="text-sm shrink-0">{Number(e.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })} {e.currency}</div>
-                </div>
+                </Reveal>
               ))}
             </div>
           </>
