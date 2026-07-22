@@ -31,13 +31,33 @@ export function normalizePhoneNumber(raw) {
   return digits ? `+${digits}` : "";
 }
 
+// Mexican numbers have two live E.164-ish forms in the wild: the modern
+// standard (+52XXXXXXXXXX, 10 digits) and WhatsApp's own legacy internal
+// form (+521XXXXXXXXXX, with a "1" inserted after the country code) —
+// Meta's inbound webhook and message-status callbacks use the +521 form
+// even when the number was originally sent/verified as +52. Confirmed
+// directly: a real inbound reply arrived as +5213221174070 while the
+// matching people row was stored as +523221174070 — an exact-string
+// match silently missed it. Generate both candidate forms so lookups
+// work regardless of which one Meta happens to hand back.
+function mxCandidates(normalized) {
+  if (normalized.startsWith("+521") && normalized.length === 14) {
+    return [normalized, "+52" + normalized.slice(4)];
+  }
+  if (normalized.startsWith("+52") && !normalized.startsWith("+521") && normalized.length === 13) {
+    return [normalized, "+521" + normalized.slice(3)];
+  }
+  return [normalized];
+}
+
 export async function getActiveMembership(supabase, phoneNumber, orgId) {
   const normalized = normalizePhoneNumber(phoneNumber);
   if (!normalized) return null;
 
-  const { data: person, error: personErr } = await supabase
-    .from("people").select("id, full_name").eq("whatsapp_number", normalized).maybeSingle();
+  const { data: people, error: personErr } = await supabase
+    .from("people").select("id, full_name").in("whatsapp_number", mxCandidates(normalized));
   if (personErr) throw personErr;
+  const person = people?.[0];
   if (!person) return null; // unknown number
 
   const { data: membership, error: memberErr } = await supabase
