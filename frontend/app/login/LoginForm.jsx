@@ -11,6 +11,7 @@ import { COLORS, FONTS, FONT_IMPORT, inputStyle } from "../../lib/design-tokens"
 const REASON_MESSAGES = {
   revoked: "Your access has been removed. If this seems wrong, contact your org admin.",
   "auth-error": "That link didn't work or has expired. Request a new one below.",
+  "wrong-page": "You're signed in, but don't have access to that page. Sign in again to reach a page for your role.",
 };
 
 export default function LoginForm() {
