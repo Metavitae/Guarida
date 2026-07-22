@@ -146,3 +146,40 @@ export async function sendWhatsAppTemplate(toPersonPhone, templateName, language
     { body: bodyParams.join(" | "), messageType, templateName }
   );
 }
+
+// Donors aren't `people`/`memberships` rows — they're external supporters,
+// not org members, so getActiveMembership()'s "active membership" check
+// doesn't apply to them at all (and shouldn't: giving a donor a membership
+// row would incorrectly grant them org-member RLS access everywhere else).
+// This is the donor-table equivalent authorization boundary: a real,
+// existing donors row in this org *is* the check, same role the
+// membership check plays for staff. Builds guarida_donor_update's
+// {{1}}/{{2}} (name, summary) from the donor row itself, so the caller
+// never has to know the donor's name before this function looks it up.
+export async function sendDonorUpdateNotice(donorId, summary, orgId = process.env.PILOT_ORG_ID) {
+  const supabase = getSupabaseAdmin();
+  const { data: donor, error: donorErr } = await supabase
+    .from("donors").select("id, name, whatsapp_number").eq("id", donorId).eq("org_id", orgId).maybeSingle();
+  if (donorErr) throw donorErr;
+  if (!donor) throw new Error(`Refusing to send: no donor ${donorId} in org ${orgId}.`);
+  if (!donor.whatsapp_number) throw new Error(`Donor ${donor.name} has no whatsapp_number on file.`);
+
+  const provider = process.env.WHATSAPP_PROVIDER || "meta";
+  if (provider !== "meta") throw new Error(`Unsupported WHATSAPP_PROVIDER: ${provider}`);
+
+  const bodyParams = [donor.name, summary || "your continued support of our work"];
+  const { providerMessageId } = await callMetaSend({
+    messaging_product: "whatsapp",
+    to: normalizePhoneNumber(donor.whatsapp_number).replace("+", ""),
+    type: "template",
+    template: { name: "guarida_donor_update", language: { code: "en_US" }, components: [{ type: "body", parameters: bodyParams.map((text) => ({ type: "text", text })) }] },
+  });
+
+  await logWhatsAppMessage(supabase, {
+    orgId, personId: null, direction: "outbound",
+    fromNumber: process.env.META_WHATSAPP_PHONE_NUMBER_ID, toNumber: normalizePhoneNumber(donor.whatsapp_number),
+    body: bodyParams.join(" | "), providerMessageId, messageType: "donor_update", templateName: "guarida_donor_update",
+  });
+
+  return { providerMessageId, donor };
+}

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Heart, Home, PawPrint, Circle, Plus, ChevronDown, Check } from "lucide-react";
+import { Heart, Home, PawPrint, Circle, Plus, ChevronDown, Check, Send, AlertCircle } from "lucide-react";
 import Nav from "../../components/Nav";
 import { COLORS, FONTS, FONT_IMPORT, inputStyle } from "../../lib/design-tokens";
 import { supabase } from "../../lib/supabase-client";
@@ -22,13 +22,25 @@ function DonorCard({ donor, onSave }) {
   const [expanded, setExpanded] = useState(false);
   const [draft, setDraft] = useState(donor);
   const [saving, setSaving] = useState(false);
+  const [summary, setSummary] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendResult, setSendResult] = useState(null);
 
   useEffect(() => setDraft(donor), [donor]);
 
   async function handleSave() {
     setSaving(true);
-    await onSave(donor.id, { name: draft.name, contact: draft.contact, donor_type: draft.donor_type, stage: draft.stage, notes: draft.notes });
+    await onSave(donor.id, { name: draft.name, contact: draft.contact, whatsapp_number: draft.whatsapp_number, donor_type: draft.donor_type, stage: draft.stage, notes: draft.notes });
     setSaving(false);
+  }
+
+  async function handleSendUpdate() {
+    setSending(true);
+    const res = await fetch("/api/donors/send-update", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ donorId: donor.id, summary }),
+    });
+    setSendResult(await res.json());
+    setSending(false);
   }
 
   return (
@@ -50,7 +62,8 @@ function DonorCard({ donor, onSave }) {
       {expanded && (
         <div style={{ borderTop: `1.5px solid ${COLORS.line}` }} className="px-5 py-5 space-y-3">
           <input value={draft.name || ""} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="Name" style={inputStyle} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
-          <input value={draft.contact || ""} onChange={(e) => setDraft({ ...draft, contact: e.target.value })} placeholder="Contact (email / phone / WhatsApp)" style={inputStyle} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
+          <input value={draft.contact || ""} onChange={(e) => setDraft({ ...draft, contact: e.target.value })} placeholder="Contact (email / phone)" style={inputStyle} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
+          <input value={draft.whatsapp_number || ""} onChange={(e) => setDraft({ ...draft, whatsapp_number: e.target.value })} placeholder="WhatsApp number (for donor updates)" style={inputStyle} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
           <div className="grid grid-cols-2 gap-3">
             <select value={draft.donor_type || "prospect"} onChange={(e) => setDraft({ ...draft, donor_type: e.target.value })} style={inputStyle} className="rounded-xl px-3 py-2 text-sm outline-none">
               {["prospect", "donor", "investor"].map((t) => <option key={t} value={t}>{t}</option>)}
@@ -63,6 +76,21 @@ function DonorCard({ donor, onSave }) {
           <button onClick={handleSave} disabled={saving} style={{ backgroundColor: COLORS.teal, color: "#FFFFFF" }} className="rounded-full px-4 py-2 text-sm font-medium flex items-center gap-1.5">
             <Check size={13} /> {saving ? "Saving…" : "Save"}
           </button>
+
+          <div style={{ borderTop: `1.5px solid ${COLORS.line}` }} className="pt-3 mt-1 space-y-2">
+            <div style={{ color: COLORS.ink, fontFamily: FONTS.mono }} className="text-xs uppercase tracking-wide opacity-70">Send donor update</div>
+            <input value={summary} onChange={(e) => setSummary(e.target.value)} placeholder={'e.g. "your gift is helping fund Luna\'s vet care"'}
+              style={inputStyle} className="w-full rounded-xl px-3 py-2 text-sm outline-none" />
+            <button onClick={handleSendUpdate} disabled={sending || !donor.whatsapp_number} style={{ backgroundColor: donor.whatsapp_number ? COLORS.marigold : COLORS.line, color: "#FFFFFF" }} className="rounded-full px-4 py-2 text-sm font-medium flex items-center gap-1.5">
+              <Send size={13} /> {sending ? "Sending…" : "Send update (WhatsApp template)"}
+            </button>
+            {!donor.whatsapp_number && <div style={{ color: `${COLORS.ink}66` }} className="text-xs">Add a WhatsApp number above to enable this.</div>}
+            {sendResult && (
+              <div style={{ color: sendResult.sent ? COLORS.green : COLORS.coral }} className="text-xs flex items-center gap-1.5">
+                {sendResult.sent ? <Check size={12} /> : <AlertCircle size={12} />} {sendResult.sent ? "Sent" : (sendResult.error || sendResult.reason)}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
