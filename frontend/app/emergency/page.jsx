@@ -69,7 +69,10 @@ export default function EmergencyPage() {
           Report abuse or neglect
         </h1>
         <p style={{ color: `${COLORS.ink}99` }} className="text-sm mb-8">
-          The right contact depends on the situation and where it's happening. This is a reference page, not a report form — it points you to the real authority's own channel.
+          The right contact depends on the situation and where it's happening. This is a reference page, not a report form — it points you to the real authority's own channel. First time reporting?{" "}
+          <a href="/report-guide" style={{ color: COLORS.teal }} className="underline">
+            Read the step-by-step guide
+          </a>.
         </p>
 
         {/* Situation picker */}
