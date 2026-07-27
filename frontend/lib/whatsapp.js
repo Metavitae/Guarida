@@ -147,12 +147,20 @@ export async function sendWhatsAppTemplate(toPersonPhone, templateName, language
   );
 }
 
-// Read-only status check — no message send, no side effects. Discovers
-// the WABA id from the token's own granular_scopes (via debug_token)
-// rather than hardcoding one anywhere, since it was never recorded when
-// the WABA was set up. Doubles as a live token-validity check: debug_token
-// itself fails first if the token is expired/invalid, before this ever
-// gets to the template lookup.
+// Not a secret - visible in Meta Business Manager > Guarida > Settings >
+// Accounts > WhatsApp Accounts, same place the phone number was set up.
+// Confirmed correct by the founder directly (2026-07-27). Not
+// auto-discovered via the API: the System User token has
+// whatsapp_business_management/whatsapp_business_messaging but not
+// business_management, so /me/businesses (needed to walk from token ->
+// business -> owned_whatsapp_business_accounts) 403s - confirmed directly
+// against this project's real token, not assumed. Hardcoding here is
+// simpler and more robust than chasing that permission.
+const WABA_ID = "1022668264095877";
+
+// Read-only status check — no message send, no side effects. Doubles as
+// a live token-validity check: debug_token fails first if the token is
+// expired/invalid, before this ever gets to the template lookup.
 export async function getTemplateStatuses(templateNames) {
   const token = process.env.META_WHATSAPP_TOKEN;
   if (!token) throw new Error("Missing META_WHATSAPP_TOKEN.");
@@ -163,42 +171,17 @@ export async function getTemplateStatuses(templateNames) {
     return { tokenValid: false, tokenError: debugJson.error?.message || "debug_token call failed", templates: [] };
   }
 
-  const scopes = debugJson.data?.granular_scopes || [];
-  const wabaScope = scopes.find((s) => s.scope === "whatsapp_business_management" || s.scope === "whatsapp_business_messaging");
-  let wabaId = wabaScope?.target_ids?.[0];
-
-  // System User tokens (Business Manager asset assignment) report scope
-  // names in granular_scopes but no target_ids - confirmed directly
-  // against this project's real token, not assumed from docs. Fall back
-  // to walking Business Manager: /me/businesses (the system user's own
-  // assigned business) -> /{business_id}/owned_whatsapp_business_accounts.
-  let bizJson, wabaJson;
-  if (!wabaId && debugJson.data?.type === "SYSTEM_USER") {
-    const bizRes = await fetch(`https://graph.facebook.com/v21.0/me/businesses`, { headers: { Authorization: `Bearer ${token}` } });
-    bizJson = await bizRes.json();
-    const businessId = bizJson.data?.[0]?.id;
-    if (businessId) {
-      const wabaRes = await fetch(`https://graph.facebook.com/v21.0/${businessId}/owned_whatsapp_business_accounts`, { headers: { Authorization: `Bearer ${token}` } });
-      wabaJson = await wabaRes.json();
-      wabaId = wabaJson.data?.[0]?.id;
-    }
-  }
-
-  if (!wabaId) {
-    return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, tokenError: "Could not discover WABA id via granular_scopes or Business Manager lookup.", rawBizData: bizJson, rawWabaData: wabaJson, templates: [] };
-  }
-
-  const templatesRes = await fetch(`https://graph.facebook.com/v21.0/${wabaId}/message_templates?fields=name,status,category,rejected_reason&limit=100`, {
+  const templatesRes = await fetch(`https://graph.facebook.com/v21.0/${WABA_ID}/message_templates?fields=name,status,category,rejected_reason&limit=100`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const templatesJson = await templatesRes.json();
   if (!templatesRes.ok) {
-    return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, wabaId, tokenError: `message_templates call failed: ${JSON.stringify(templatesJson)}`, templates: [] };
+    return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, wabaId: WABA_ID, tokenError: `message_templates call failed: ${JSON.stringify(templatesJson)}`, templates: [] };
   }
 
   const all = templatesJson.data || [];
   const filtered = templateNames ? all.filter((t) => templateNames.includes(t.name)) : all;
-  return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, wabaId, templates: filtered };
+  return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, wabaId: WABA_ID, templates: filtered };
 }
 
 // Donors aren't `people`/`memberships` rows — they're external supporters,
