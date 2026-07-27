@@ -172,19 +172,20 @@ export async function getTemplateStatuses(templateNames) {
   // against this project's real token, not assumed from docs. Fall back
   // to walking Business Manager: /me/businesses (the system user's own
   // assigned business) -> /{business_id}/owned_whatsapp_business_accounts.
+  let bizJson, wabaJson;
   if (!wabaId && debugJson.data?.type === "SYSTEM_USER") {
     const bizRes = await fetch(`https://graph.facebook.com/v21.0/me/businesses`, { headers: { Authorization: `Bearer ${token}` } });
-    const bizJson = await bizRes.json();
+    bizJson = await bizRes.json();
     const businessId = bizJson.data?.[0]?.id;
     if (businessId) {
       const wabaRes = await fetch(`https://graph.facebook.com/v21.0/${businessId}/owned_whatsapp_business_accounts`, { headers: { Authorization: `Bearer ${token}` } });
-      const wabaJson = await wabaRes.json();
+      wabaJson = await wabaRes.json();
       wabaId = wabaJson.data?.[0]?.id;
     }
   }
 
   if (!wabaId) {
-    return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, tokenError: "Could not discover WABA id via granular_scopes or Business Manager lookup.", rawDebugData: debugJson.data, templates: [] };
+    return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, tokenError: "Could not discover WABA id via granular_scopes or Business Manager lookup.", rawBizData: bizJson, rawWabaData: wabaJson, templates: [] };
   }
 
   const templatesRes = await fetch(`https://graph.facebook.com/v21.0/${wabaId}/message_templates?fields=name,status,category,rejected_reason&limit=100`, {
