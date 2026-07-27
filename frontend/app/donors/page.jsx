@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Heart, Home, PawPrint, Circle, Plus, ChevronDown, Check, Send, AlertCircle } from "lucide-react";
+import { Heart, Home, PawPrint, Circle, Plus, ChevronDown, Check, Send, AlertCircle, DollarSign } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
 import { COLORS, FONTS, FONT_IMPORT, inputStyle } from "../../lib/design-tokens";
@@ -19,7 +19,11 @@ const fosters = [
 
 const stageColor = { prospect: `${COLORS.ink}55`, contacted: COLORS.marigold, active: COLORS.green, lapsed: COLORS.coral };
 
-function DonorCard({ donor, onSave }) {
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function DonorCard({ donor, donations, cases, onSave, onAddDonation, onUpdateDonationCase }) {
   const [expanded, setExpanded] = useState(false);
   const [draft, setDraft] = useState(donor);
   const [saving, setSaving] = useState(false);
@@ -27,7 +31,23 @@ function DonorCard({ donor, onSave }) {
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
 
+  const [donationForm, setDonationForm] = useState({ amount: "", currency: "MXN", donatedAt: todayISO(), caseId: "" });
+  const [addingDonation, setAddingDonation] = useState(false);
+
   useEffect(() => setDraft(donor), [donor]);
+
+  async function handleAddDonation() {
+    if (!donationForm.amount) return;
+    setAddingDonation(true);
+    await onAddDonation(donor.id, {
+      amount: Number(donationForm.amount),
+      currency: donationForm.currency,
+      donated_at: donationForm.donatedAt,
+      case_id: donationForm.caseId || null,
+    });
+    setDonationForm({ amount: "", currency: donationForm.currency, donatedAt: todayISO(), caseId: "" });
+    setAddingDonation(false);
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -92,6 +112,56 @@ function DonorCard({ donor, onSave }) {
               </div>
             )}
           </div>
+
+          <div style={{ borderTop: `1.5px solid ${COLORS.line}` }} className="pt-3 mt-1 space-y-2">
+            <div style={{ color: COLORS.ink, fontFamily: FONTS.mono }} className="text-xs uppercase tracking-wide opacity-70 flex items-center gap-1.5">
+              <DollarSign size={12} /> Donations
+            </div>
+
+            {donations.length === 0 ? (
+              <p style={{ color: `${COLORS.ink}66` }} className="text-xs">No donations logged yet.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {donations.map((d) => (
+                  <div key={d.id} style={{ backgroundColor: `${COLORS.teal}0a` }} className="rounded-lg px-3 py-2 flex items-center gap-2">
+                    <div style={{ color: COLORS.ink, fontFamily: FONTS.mono }} className="text-xs shrink-0">
+                      {Number(d.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })} {d.currency}
+                    </div>
+                    <div style={{ color: `${COLORS.ink}77` }} className="text-xs shrink-0">{d.donated_at}</div>
+                    <select value={d.case_id || ""} onChange={(e) => onUpdateDonationCase(d.id, e.target.value || null)}
+                      style={inputStyle} className="flex-1 min-w-0 rounded-lg px-2 py-1 text-xs outline-none">
+                      <option value="">No case earmarked</option>
+                      {cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <input type="number" step="0.01" min="0" placeholder="Amount" value={donationForm.amount}
+                onChange={(e) => setDonationForm({ ...donationForm, amount: e.target.value })}
+                style={inputStyle} className="rounded-xl px-3 py-2 text-sm outline-none" />
+              <select value={donationForm.currency} onChange={(e) => setDonationForm({ ...donationForm, currency: e.target.value })}
+                style={inputStyle} className="rounded-xl px-3 py-2 text-sm outline-none">
+                <option value="MXN">MXN</option>
+                <option value="USD">USD</option>
+              </select>
+              <input type="date" value={donationForm.donatedAt}
+                onChange={(e) => setDonationForm({ ...donationForm, donatedAt: e.target.value })}
+                style={inputStyle} className="rounded-xl px-3 py-2 text-sm outline-none" />
+              <select value={donationForm.caseId} onChange={(e) => setDonationForm({ ...donationForm, caseId: e.target.value })}
+                style={inputStyle} className="rounded-xl px-3 py-2 text-sm outline-none">
+                <option value="">No case (earmark later)</option>
+                {cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+            </div>
+            <button onClick={handleAddDonation} disabled={addingDonation || !donationForm.amount}
+              style={{ backgroundColor: donationForm.amount ? COLORS.marigold : COLORS.line, color: "#FFFFFF" }}
+              className="rounded-full px-4 py-2 text-sm font-medium flex items-center gap-1.5">
+              <Plus size={13} /> {addingDonation ? "Logging…" : "Log donation"}
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -131,6 +201,8 @@ function NewDonorForm({ onAdd, onCancel }) {
 export default function DonorsPage() {
   const [tab, setTab] = useState("donors");
   const [donors, setDonors] = useState([]);
+  const [donations, setDonations] = useState([]);
+  const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
@@ -139,11 +211,24 @@ export default function DonorsPage() {
   const load = useCallback(async () => {
     if (!supabase) { setError("Supabase isn't configured."); setLoading(false); return; }
     const { data: memberships } = await supabase.from("memberships").select("org_id").eq("status", "active").limit(1);
-    setOrgId(memberships?.[0]?.org_id ?? null);
+    const org = memberships?.[0]?.org_id ?? null;
+    setOrgId(org);
 
     const { data, error: err } = await supabase.from("donors").select("*").order("name");
     if (err) { setError(err.message); setLoading(false); return; }
     setDonors(data ?? []);
+
+    const { data: donationRows, error: donErr } = await supabase
+      .from("donations").select("id, donor_id, case_id, amount, currency, donated_at")
+      .order("donated_at", { ascending: false });
+    if (donErr) { setError(donErr.message); setLoading(false); return; }
+    setDonations(donationRows ?? []);
+
+    if (org) {
+      const { data: caseRows } = await supabase.from("cases").select("id, title").eq("org_id", org).order("title");
+      setCases(caseRows ?? []);
+    }
+
     setLoading(false);
   }, []);
 
@@ -160,6 +245,20 @@ export default function DonorsPage() {
   async function handleSave(id, fields) {
     setError("");
     const { error: err } = await supabase.from("donors").update(fields).eq("id", id);
+    if (err) { setError(err.message); return; }
+    load();
+  }
+
+  async function handleAddDonation(donorId, fields) {
+    setError("");
+    const { error: err } = await supabase.from("donations").insert({ ...fields, donor_id: donorId, org_id: orgId });
+    if (err) { setError(err.message); return; }
+    load();
+  }
+
+  async function handleUpdateDonationCase(donationId, caseId) {
+    setError("");
+    const { error: err } = await supabase.from("donations").update({ case_id: caseId }).eq("id", donationId);
     if (err) { setError(err.message); return; }
     load();
   }
@@ -208,7 +307,18 @@ export default function DonorsPage() {
             ) : donors.length === 0 ? (
               <p style={{ color: `${COLORS.ink}77` }} className="text-sm">No donors yet.</p>
             ) : (
-              donors.map((d, i) => <Reveal key={d.id} delay={Math.min(i, 5) * 0.03}><DonorCard donor={d} onSave={handleSave} /></Reveal>)
+              donors.map((d, i) => (
+                <Reveal key={d.id} delay={Math.min(i, 5) * 0.03}>
+                  <DonorCard
+                    donor={d}
+                    donations={donations.filter((don) => don.donor_id === d.id)}
+                    cases={cases}
+                    onSave={handleSave}
+                    onAddDonation={handleAddDonation}
+                    onUpdateDonationCase={handleUpdateDonationCase}
+                  />
+                </Reveal>
+              ))
             )}
           </motion.div>
         )}
