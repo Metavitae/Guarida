@@ -9,13 +9,15 @@ the app (commit pending at removal time — see git log for the exact SHA).
 The case record itself (notes, evidence, vet recommendations, legal
 citations) is untouched by this removal.
 
-**Table drop — verified safe, not yet executed (needs manual run):**
-confirmed live against Supabase before removal — `case_authority_reports`
-has zero rows, and no other table in the schema has a foreign key
-pointing into it (checked via the project's PostgREST OpenAPI
-definitions — only the table's own self-reference exists). This sandbox
-has no direct Postgres/DATABASE_URL access, only the REST API, so the
-actual `DROP TABLE` needs to be run manually via Supabase's SQL editor:
+**Table drop — DONE (executed 2026-07-27 by the founder via Supabase's SQL
+editor; independently confirmed by CC via a REST query returning a clean
+404/PGRST205 "could not find the table").** Verified safe beforehand —
+`case_authority_reports` had zero rows, and no other table in the schema
+had a foreign key pointing into it (checked via the project's PostgREST
+OpenAPI definitions — only the table's own self-reference existed). This
+sandbox has no direct Postgres/DATABASE_URL access, only the REST API, so
+the actual `DROP TABLE` had to be run manually. For the record, the SQL
+that was run:
 
 ```sql
 drop table if exists case_authority_reports;
