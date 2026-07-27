@@ -167,7 +167,12 @@ export async function getTemplateStatuses(templateNames) {
   const wabaScope = scopes.find((s) => s.scope === "whatsapp_business_management" || s.scope === "whatsapp_business_messaging");
   const wabaId = wabaScope?.target_ids?.[0];
   if (!wabaId) {
-    return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, tokenError: "No WABA id found in token's granular_scopes.", templates: [] };
+    // Temporary escape hatch for debugging WABA-id discovery: System User
+    // tokens (Business Manager asset assignment) appear to report scopes
+    // differently than the OAuth user tokens this was first tested
+    // against - surface the raw debug_token payload so the real shape is
+    // visible instead of guessing blind.
+    return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, tokenError: "No WABA id found in token's granular_scopes.", rawDebugData: debugJson.data, templates: [] };
   }
 
   const templatesRes = await fetch(`https://graph.facebook.com/v21.0/${wabaId}/message_templates?fields=name,status,category,rejected_reason&limit=100`, {
