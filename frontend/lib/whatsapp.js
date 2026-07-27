@@ -165,14 +165,26 @@ export async function getTemplateStatuses(templateNames) {
 
   const scopes = debugJson.data?.granular_scopes || [];
   const wabaScope = scopes.find((s) => s.scope === "whatsapp_business_management" || s.scope === "whatsapp_business_messaging");
-  const wabaId = wabaScope?.target_ids?.[0];
+  let wabaId = wabaScope?.target_ids?.[0];
+
+  // System User tokens (Business Manager asset assignment) report scope
+  // names in granular_scopes but no target_ids - confirmed directly
+  // against this project's real token, not assumed from docs. Fall back
+  // to walking Business Manager: /me/businesses (the system user's own
+  // assigned business) -> /{business_id}/owned_whatsapp_business_accounts.
+  if (!wabaId && debugJson.data?.type === "SYSTEM_USER") {
+    const bizRes = await fetch(`https://graph.facebook.com/v21.0/me/businesses`, { headers: { Authorization: `Bearer ${token}` } });
+    const bizJson = await bizRes.json();
+    const businessId = bizJson.data?.[0]?.id;
+    if (businessId) {
+      const wabaRes = await fetch(`https://graph.facebook.com/v21.0/${businessId}/owned_whatsapp_business_accounts`, { headers: { Authorization: `Bearer ${token}` } });
+      const wabaJson = await wabaRes.json();
+      wabaId = wabaJson.data?.[0]?.id;
+    }
+  }
+
   if (!wabaId) {
-    // Temporary escape hatch for debugging WABA-id discovery: System User
-    // tokens (Business Manager asset assignment) appear to report scopes
-    // differently than the OAuth user tokens this was first tested
-    // against - surface the raw debug_token payload so the real shape is
-    // visible instead of guessing blind.
-    return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, tokenError: "No WABA id found in token's granular_scopes.", rawDebugData: debugJson.data, templates: [] };
+    return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, tokenError: "Could not discover WABA id via granular_scopes or Business Manager lookup.", rawDebugData: debugJson.data, templates: [] };
   }
 
   const templatesRes = await fetch(`https://graph.facebook.com/v21.0/${wabaId}/message_templates?fields=name,status,category,rejected_reason&limit=100`, {
