@@ -147,6 +147,42 @@ export async function sendWhatsAppTemplate(toPersonPhone, templateName, language
   );
 }
 
+// Read-only status check — no message send, no side effects. Discovers
+// the WABA id from the token's own granular_scopes (via debug_token)
+// rather than hardcoding one anywhere, since it was never recorded when
+// the WABA was set up. Doubles as a live token-validity check: debug_token
+// itself fails first if the token is expired/invalid, before this ever
+// gets to the template lookup.
+export async function getTemplateStatuses(templateNames) {
+  const token = process.env.META_WHATSAPP_TOKEN;
+  if (!token) throw new Error("Missing META_WHATSAPP_TOKEN.");
+
+  const debugRes = await fetch(`https://graph.facebook.com/v21.0/debug_token?input_token=${token}&access_token=${token}`);
+  const debugJson = await debugRes.json();
+  if (!debugRes.ok || debugJson.error) {
+    return { tokenValid: false, tokenError: debugJson.error?.message || "debug_token call failed", templates: [] };
+  }
+
+  const scopes = debugJson.data?.granular_scopes || [];
+  const wabaScope = scopes.find((s) => s.scope === "whatsapp_business_management" || s.scope === "whatsapp_business_messaging");
+  const wabaId = wabaScope?.target_ids?.[0];
+  if (!wabaId) {
+    return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, tokenError: "No WABA id found in token's granular_scopes.", templates: [] };
+  }
+
+  const templatesRes = await fetch(`https://graph.facebook.com/v21.0/${wabaId}/message_templates?fields=name,status,category,rejected_reason&limit=100`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const templatesJson = await templatesRes.json();
+  if (!templatesRes.ok) {
+    return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, wabaId, tokenError: `message_templates call failed: ${JSON.stringify(templatesJson)}`, templates: [] };
+  }
+
+  const all = templatesJson.data || [];
+  const filtered = templateNames ? all.filter((t) => templateNames.includes(t.name)) : all;
+  return { tokenValid: true, tokenExpiresAt: debugJson.data?.expires_at, wabaId, templates: filtered };
+}
+
 // Donors aren't `people`/`memberships` rows — they're external supporters,
 // not org members, so getActiveMembership()'s "active membership" check
 // doesn't apply to them at all (and shouldn't: giving a donor a membership
