@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
-import { sendWhatsAppTemplate } from "../../../../lib/whatsapp";
+import { sendOrgTemplateNotice } from "../../../../lib/whatsapp";
 
 // Sends the vet-care notice template to whoever's actually responsible
 // for the animal's day-to-day care — resolved from real assignment data
@@ -65,9 +65,9 @@ export async function POST(request) {
   for (const person of people ?? []) {
     if (!person.whatsapp_number) { results.push({ person: person.full_name, sent: false, reason: "no whatsapp_number on file" }); continue; }
     try {
-      const { providerMessageId } = await sendWhatsAppTemplate(
-        person.whatsapp_number, "guarida_vet_care_notice", "en_US",
-        [animalName, careSummary, caseRow.title], orgId, "vet_care_notice"
+      const { providerMessageId } = await sendOrgTemplateNotice(
+        person.whatsapp_number, "vet_care_notice", orgId,
+        [animalName, careSummary, caseRow.title]
       );
       results.push({ person: person.full_name, sent: true, providerMessageId });
     } catch (err) {

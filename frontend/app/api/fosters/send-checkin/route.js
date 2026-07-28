@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
-import { sendWhatsAppTemplate } from "../../../../lib/whatsapp";
+import { sendOrgTemplateNotice } from "../../../../lib/whatsapp";
 
 // Sends a check-in ping to the foster on an active placement. Server-side
 // only — keeps the service-role key and Meta token out of the client
@@ -42,8 +42,8 @@ export async function POST(request) {
   }
 
   try {
-    const { providerMessageId } = await sendWhatsAppTemplate(
-      foster.whatsapp_number, "guarida_foster_checkin", "en_US", [animalName], orgId, "foster_checkin"
+    const { providerMessageId } = await sendOrgTemplateNotice(
+      foster.whatsapp_number, "foster_checkin", orgId, [animalName]
     );
     return Response.json({ sent: true, person: foster.full_name, providerMessageId });
   } catch (err) {

@@ -30,8 +30,12 @@ export async function GET(request) {
   const { data: isWorker } = await authClient.rpc("is_active_worker");
   if (!isWorker) return Response.json({ error: "Not an active worker" }, { status: 403 });
 
+  // The caller's own org, not a global default - see docs/multi-org-whatsapp-schema.md.
+  const { data: callerOrg } = await authClient.rpc("my_org").maybeSingle();
+  if (!callerOrg?.org_id) return Response.json({ error: "Could not resolve your org membership" }, { status: 403 });
+
   try {
-    const result = await getTemplateStatuses(TEMPLATE_NAMES);
+    const result = await getTemplateStatuses(callerOrg.org_id, TEMPLATE_NAMES);
     return Response.json(result);
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
