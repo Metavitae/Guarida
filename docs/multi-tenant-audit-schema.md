@@ -49,13 +49,14 @@ grant execute on function my_org to authenticated;
 org — same known limitation as the rest of the app today (see the RLS
 finding below), not something this function introduces.
 
-## Until this is run
+## Status: RUN, verified live (2026-07-28)
 
-`app/case-intake/page.jsx` and `components/Nav.jsx` both call
-`supabase.rpc("my_org")`. Until the function above exists, that RPC call
-will fail (function not found) and both features fall back silently:
-case-intake's jurisdiction stays `null` → the insert uses `"MX"` (the
-`cases.jurisdiction` column's own default) instead of `"MX-Nayarit"`, and
-Nav's breadcrumb shows no org suffix at all. Neither breaks the app, but
-Nayarit's own case matching won't get its normal jurisdiction until this
-is run.
+Founder ran this in Supabase's SQL Editor. Verified directly with a real
+disposable staff account (created, tested, deleted - zero rows left
+behind): `my_org()` returns `{org_id, name: "Wet Noses Rescue", country:
+"MX", jurisdiction_state: "Nayarit"}` for a real authenticated session.
+Confirmed as a genuine sidestep, not a coincidental fix: the same
+session's direct `organizations` select still hits the old recursion
+error. `app/case-intake/page.jsx` and `components/Nav.jsx` are both live
+on this now - no redeploy needed, they call it client-side on next page
+load.
