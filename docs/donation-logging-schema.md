@@ -25,6 +25,14 @@ Supabase's SQL Editor — CC has no DDL access.
   `donors`) — no new function needed, just the same restrictive policy
   applied to a second table.
 
+**Policy applied — DONE (2026-07-27, run by the founder via Supabase's SQL
+editor; independently confirmed by CC).** Verification method: seeded a
+real throwaway donation row via service role, then read it with both a
+freshly-created `vet`-role test account and a `staff`-role test account.
+`vet` got an empty result (`[]`), `staff` got the row back. Not ambiguous
+— this used a row known to exist, not just an absence of data. Both test
+accounts and the seeded row were deleted afterward.
+
 ## 1. Restrictive policy on `donations` — admin/staff only
 
 Same pattern as `donors` (`docs/donor-accounting-schema.md` section 2):
