@@ -22,12 +22,15 @@ export async function POST(request) {
   if (!placementId) return Response.json({ error: "placementId required" }, { status: 400 });
 
   const admin = createClient(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-  const orgId = process.env.PILOT_ORG_ID;
 
   const { data: placement, error: placementErr } = await admin.from("foster_placements")
-    .select("id, status, animal_id, foster_person_id").eq("id", placementId).single();
+    .select("id, org_id, status, animal_id, foster_person_id").eq("id", placementId).single();
   if (placementErr) return Response.json({ error: placementErr.message }, { status: 404 });
   if (placement.status !== "active") return Response.json({ error: "Placement is not active" }, { status: 400 });
+  // The placement's own org, not a global env default - a second tenant's
+  // foster placement must be checked against ITS org's membership, not
+  // whichever org happens to be in PILOT_ORG_ID.
+  const orgId = placement.org_id;
 
   const { data: foster } = await admin.from("people").select("id, full_name, whatsapp_number").eq("id", placement.foster_person_id).single();
   if (!foster?.whatsapp_number) return Response.json({ error: "Foster has no whatsapp_number on file" }, { status: 400 });

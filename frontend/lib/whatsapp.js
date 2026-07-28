@@ -154,9 +154,15 @@ export async function sendWhatsAppTemplate(toPersonPhone, templateName, language
 // whatsapp_business_management/whatsapp_business_messaging but not
 // business_management, so /me/businesses (needed to walk from token ->
 // business -> owned_whatsapp_business_accounts) 403s - confirmed directly
-// against this project's real token, not assumed. Hardcoding here is
-// simpler and more robust than chasing that permission.
-const WABA_ID = "1022668264095877";
+// against this project's real token, not assumed.
+//
+// Moved from a bare JS constant to an env var (2026-07-28 tenant audit):
+// every other Meta credential here (token, phone number id) was already
+// env-configured per deployment - the WABA id being the one hardcoded
+// exception meant a new tenant's own WhatsApp account genuinely could not
+// be connected without editing this file. Falls back to Wet Noses' known
+// value so nothing breaks if the env var isn't set yet.
+const WABA_ID = process.env.META_WHATSAPP_WABA_ID || "1022668264095877";
 
 // Read-only status check — no message send, no side effects. Doubles as
 // a live token-validity check: debug_token fails first if the token is

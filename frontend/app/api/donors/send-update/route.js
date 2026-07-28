@@ -19,11 +19,18 @@ export async function POST(request) {
   const { data: isAdminOrStaff } = await authClient.rpc("is_admin_or_staff");
   if (!isAdminOrStaff) return Response.json({ error: "Admin/staff only" }, { status: 403 });
 
+  // The caller's own org, not a global env default - see the identical fix
+  // in /api/fosters/send-checkin and /api/vet-care/send-notice. Uses
+  // my_org() (security-definer RPC) rather than a direct organizations
+  // select, same recursive-RLS-on-`people` sidestep as case-intake.
+  const { data: callerOrg } = await authClient.rpc("my_org").maybeSingle();
+  if (!callerOrg?.org_id) return Response.json({ error: "Could not resolve your org membership" }, { status: 403 });
+
   const { donorId, summary } = await request.json();
   if (!donorId) return Response.json({ error: "donorId required" }, { status: 400 });
 
   try {
-    const { providerMessageId, donor } = await sendDonorUpdateNotice(donorId, summary);
+    const { providerMessageId, donor } = await sendDonorUpdateNotice(donorId, summary, callerOrg.org_id);
     return Response.json({ sent: true, donor: donor.name, providerMessageId });
   } catch (err) {
     return Response.json({ sent: false, reason: err.message });

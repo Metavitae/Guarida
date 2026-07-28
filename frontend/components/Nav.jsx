@@ -1,7 +1,9 @@
-import React from "react";
+"use client";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { PawPrint, ChevronRight } from "lucide-react";
 import { COLORS, FONTS } from "../lib/design-tokens";
+import { supabase } from "../lib/supabase-client";
 import LogoutButton from "./LogoutButton";
 import NavMenu from "./NavMenu";
 
@@ -10,8 +12,28 @@ import NavMenu from "./NavMenu";
 // said "Vet care · Wet Noses" while Case Intake said "New case · Wet Noses"
 // — fine individually, but as soon as there's real navigation between
 // screens, four independent copies drift out of sync. This is the fix.
+//
+// `orgName` used to default to the literal "Wet Noses" - every one of the
+// 14 call sites across the app omitted the prop, so every tenant would
+// have seen Wet Noses' name in their own breadcrumb. Now resolved live
+// per logged-in user via my_org() (see docs/multi-tenant-audit-schema.md),
+// same recursive-RLS-on-`people` sidestep case-intake uses. On public
+// pages (no session) this just falls back to no org suffix, which is
+// correct - there's no tenant to attribute the crumb to.
 
-export default function Nav({ crumb, orgName = "Wet Noses" }) {
+export default function Nav({ crumb, orgName }) {
+  const [resolvedOrgName, setResolvedOrgName] = useState(orgName || null);
+
+  useEffect(() => {
+    if (orgName || !supabase) return;
+    let cancelled = false;
+    (async () => {
+      const { data: orgRow } = await supabase.rpc("my_org").maybeSingle();
+      if (!cancelled && orgRow?.name) setResolvedOrgName(orgRow.name);
+    })();
+    return () => { cancelled = true; };
+  }, [orgName]);
+
   return (
     <div style={{ backgroundColor: COLORS.night }} className="px-6 md:px-12 py-5 flex items-center gap-3">
       <div className="flex items-center gap-3 min-w-0">
@@ -26,7 +48,7 @@ export default function Nav({ crumb, orgName = "Wet Noses" }) {
           style={{ color: `${COLORS.paper}99`, fontFamily: FONTS.mono }}
           className="text-xs uppercase tracking-wide truncate"
         >
-          {crumb} · {orgName}
+          {crumb}{resolvedOrgName ? ` · ${resolvedOrgName}` : ""}
         </span>
       </div>
       <div className="ml-auto flex items-center gap-4 shrink-0">

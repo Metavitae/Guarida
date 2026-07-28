@@ -55,15 +55,44 @@ export default function CaseIntakePage() {
   const [submitted, setSubmitted] = useState(false);
   const [matches, setMatches] = useState([]);
   const [usingSampleData, setUsingSampleData] = useState(!supabase);
+  const [orgId, setOrgId] = useState(null);
+  // Jurisdiction is derived from the reporting org's own country/state,
+  // not hardcoded — a tenant outside Nayarit (or outside Mexico) must get
+  // matches against their own applicable law, not Wet Noses'. Falls back
+  // to "MX" (the cases.jurisdiction column's own default) if a tenant
+  // hasn't set a state yet, same fallback the schema already uses.
+  const [jurisdiction, setJurisdiction] = useState(null);
 
-  // Debounced-ish match lookup — real query if Supabase is configured,
-  // otherwise the labeled sample so the screen is still demoable.
+  useEffect(() => {
+    if (!supabase) return;
+    let cancelled = false;
+    (async () => {
+      // my_org() (security-definer RPC, see docs/multi-tenant-audit-schema.md)
+      // instead of a direct .from("organizations") select - that table hits
+      // the same still-unfixed recursive RLS bug on `people` documented in
+      // docs/inventory-accounting-schema.md (confirmed directly: even a
+      // real authenticated staff session gets "infinite recursion detected
+      // in policy for relation people" back from a plain organizations
+      // select). Same sidestep pattern as the existing my_person_id().
+      const { data: orgRow, error } = await supabase.rpc("my_org").maybeSingle();
+      if (cancelled || error || !orgRow) return;
+      setOrgId(orgRow.org_id);
+      setJurisdiction(orgRow.jurisdiction_state ? `${orgRow.country}-${orgRow.jurisdiction_state}` : (orgRow.country || "MX"));
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Debounced-ish match lookup — real query once Supabase AND the org's
+  // jurisdiction are both resolved, otherwise the labeled sample so the
+  // screen is never blank (covers Supabase-not-configured, and the brief
+  // window before my_org() resolves - or before it exists at all, see
+  // docs/multi-tenant-audit-schema.md - falling back the same way).
   useEffect(() => {
     if (!description.trim()) { setMatches([]); return; }
     let cancelled = false;
 
-    if (supabase) {
-      suggestLegalMatchesReal(description, "MX-Nayarit")
+    if (supabase && jurisdiction) {
+      suggestLegalMatchesReal(description, jurisdiction)
         .then((results) => { if (!cancelled) { setMatches(results); setUsingSampleData(false); } })
         .catch(() => { if (!cancelled) { setMatches(sampleMatch(description)); setUsingSampleData(true); } });
     } else {
@@ -71,7 +100,7 @@ export default function CaseIntakePage() {
       setUsingSampleData(true);
     }
     return () => { cancelled = true; };
-  }, [description]);
+  }, [description, jurisdiction]);
 
   function addWitness() { setWitnesses([...witnesses, { name: "", contact: "" }]); }
   function updateWitness(i, field, value) {
@@ -92,7 +121,7 @@ export default function CaseIntakePage() {
       // from the client instead of a server script.
       const { data: caseRow, error } = await supabase
         .from("cases")
-        .insert({ title, description, species, location, jurisdiction: "MX-Nayarit", status: "open", needs_vet_care: requiresVet })
+        .insert({ org_id: orgId, title, description, species, location, jurisdiction: jurisdiction || "MX", status: "open", needs_vet_care: requiresVet })
         .select()
         .single();
       if (error) { console.error(error); return; }

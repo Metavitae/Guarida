@@ -24,10 +24,12 @@ export async function POST(request) {
   if (!caseId) return Response.json({ error: "caseId required" }, { status: 400 });
 
   const admin = createClient(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-  const orgId = process.env.PILOT_ORG_ID;
 
-  const { data: caseRow, error: caseErr } = await admin.from("cases").select("id, title, animal_id").eq("id", caseId).single();
+  const { data: caseRow, error: caseErr } = await admin.from("cases").select("id, org_id, title, animal_id").eq("id", caseId).single();
   if (caseErr) return Response.json({ error: caseErr.message }, { status: 404 });
+  // The case's own org, not a global env default - see the identical fix
+  // in /api/fosters/send-checkin.
+  const orgId = caseRow.org_id;
 
   const { data: notification, error: notifErr } = await admin.from("vet_notifications")
     .select("id, vet_person_id, care_plan_text").eq("case_id", caseId).order("notified_at", { ascending: false }).limit(1).maybeSingle();
