@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { PawPrint, MapPin, ScrollText, Stethoscope, DollarSign, Heart, Globe2 } from "lucide-react";
 import Nav from "../../../components/Nav";
-import { COLORS, FONTS } from "../../../lib/design-tokens";
+import { useAppTheme } from "../../../lib/theme-context";
 import { supabase } from "../../../lib/supabase-client";
 
 // One case's full picture, pulled live from the tables other screens
@@ -20,6 +20,7 @@ import { supabase } from "../../../lib/supabase-client";
 // when this case has an animal_id AND a transport row exists for it.
 
 function Section({ icon: Icon, title, children }) {
+  const { COLORS, FONTS } = useAppTheme();
   return (
     <div style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-2xl p-6 mb-4">
       <div className="flex items-center gap-2 mb-4">
@@ -32,6 +33,7 @@ function Section({ icon: Icon, title, children }) {
 }
 
 export default function CaseDetailPage() {
+  const { COLORS, FONTS } = useAppTheme();
   const { id } = useParams();
   const [caseRow, setCaseRow] = useState(null);
   const [legalMatches, setLegalMatches] = useState([]);

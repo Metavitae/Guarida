@@ -2,7 +2,7 @@
 import { Eye, Camera, Landmark, FileCheck2, ShieldAlert, ExternalLink, MapPin } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
-import { COLORS, FONTS } from "../../lib/design-tokens";
+import { useAppTheme } from "../../lib/theme-context";
 
 // Public, unauthenticated page (deliberately not in middleware.js's
 // matcher, same as /emergency) - a step-by-step explainer for someone who
@@ -18,6 +18,7 @@ import { COLORS, FONTS } from "../../lib/design-tokens";
 // in substance from that reglamento row's own source note.
 
 function StepCard({ number, icon: Icon, title, children }) {
+  const { COLORS, FONTS } = useAppTheme();
   return (
     <div style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-2xl p-6">
       <div className="flex items-center gap-3 mb-4">
@@ -39,6 +40,7 @@ function StepCard({ number, icon: Icon, title, children }) {
 }
 
 export default function ReportGuidePage() {
+  const { COLORS, FONTS } = useAppTheme();
   return (
     <div style={{ backgroundColor: COLORS.paper, minHeight: "100vh", fontFamily: FONTS.body }}>
       <Nav crumb="Reporting Guide" />

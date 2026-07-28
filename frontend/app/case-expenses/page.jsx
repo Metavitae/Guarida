@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Receipt, DollarSign } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
-import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
+import { useAppTheme } from "../../lib/theme-context";
 import { supabase } from "../../lib/supabase-client";
 
 // Internal admin-facing summary of a case's real costs — "the memory of
@@ -18,6 +18,7 @@ import { supabase } from "../../lib/supabase-client";
 // task's own instruction not to invent it in this pass.
 
 export default function CaseExpensesPage() {
+  const { COLORS, FONTS, inputStyle } = useAppTheme();
   const [cases, setCases] = useState([]);
   const [caseId, setCaseId] = useState("");
   const [expenses, setExpenses] = useState([]);

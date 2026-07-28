@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Heart, Home, PawPrint, Circle, Plus, ChevronDown, Check, Send, AlertCircle, DollarSign } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
-import { COLORS, FONTS, FONT_IMPORT, inputStyle } from "../../lib/design-tokens";
+import { useAppTheme } from "../../lib/theme-context";
 import { supabase } from "../../lib/supabase-client";
 
 // "fosters" tab is still demo-only, unrelated to this task (real foster
@@ -17,13 +17,19 @@ const fosters = [
   { animal: "Sunny", species: "wildlife", foster: "—", since: "—", status: "needs placement" },
 ];
 
-const stageColor = { prospect: `${COLORS.ink}55`, contacted: COLORS.marigold, active: COLORS.green, lapsed: COLORS.coral };
+// Was a module-level constant computed once from a static COLORS import;
+// now takes COLORS as a param since it comes from useAppTheme() instead.
+function getStageColor(COLORS) {
+  return { prospect: `${COLORS.ink}55`, contacted: COLORS.marigold, active: COLORS.green, lapsed: COLORS.coral };
+}
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
 function DonorCard({ donor, donations, cases, onSave, onAddDonation, onUpdateDonationCase }) {
+  const { COLORS, FONTS, inputStyle } = useAppTheme();
+  const stageColor = getStageColor(COLORS);
   const [expanded, setExpanded] = useState(false);
   const [draft, setDraft] = useState(donor);
   const [saving, setSaving] = useState(false);
@@ -169,6 +175,7 @@ function DonorCard({ donor, donations, cases, onSave, onAddDonation, onUpdateDon
 }
 
 function NewDonorForm({ onAdd, onCancel }) {
+  const { COLORS, inputStyle } = useAppTheme();
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [donorType, setDonorType] = useState("prospect");
@@ -199,6 +206,7 @@ function NewDonorForm({ onAdd, onCancel }) {
 }
 
 export default function DonorsPage() {
+  const { COLORS, FONTS, FONT_IMPORT, inputStyle } = useAppTheme();
   const [tab, setTab] = useState("donors");
   const [donors, setDonors] = useState([]);
   const [donations, setDonations] = useState([]);

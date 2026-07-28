@@ -4,10 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, ArrowDownCircle, ArrowUpCircle, Package } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
-import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
+import { useAppTheme } from "../../lib/theme-context";
 import { supabase } from "../../lib/supabase-client";
 
 function Field({ label, children }) {
+  const { COLORS, FONTS } = useAppTheme();
   return (
     <div className="mb-4">
       <label style={{ color: COLORS.ink, fontFamily: FONTS.mono }} className="block text-xs tracking-wide uppercase mb-2 opacity-70">
@@ -19,6 +20,7 @@ function Field({ label, children }) {
 }
 
 export default function InventoryPage() {
+  const { COLORS, FONTS, inputStyle } = useAppTheme();
   const [orgId, setOrgId] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);

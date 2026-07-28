@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PawPrint } from "lucide-react";
 import { supabase } from "../../lib/supabase-client";
-import { COLORS, FONTS, FONT_IMPORT, inputStyle } from "../../lib/design-tokens";
+import { useAppTheme, useOrgCopy } from "../../lib/theme-context";
 
 // Internal worker sign-in only - matches the existing app's design system
 // (ocean-night/coral/marigold), not the public landing page's palette,
@@ -15,6 +15,11 @@ const REASON_MESSAGES = {
 };
 
 export default function LoginForm() {
+  const { COLORS, FONTS, FONT_IMPORT, inputStyle } = useAppTheme();
+  // "For Wet Noses staff..." used to be hardcoded here - now themeable per
+  // org (see docs/multi-org-theming-schema.md's copy.loginSubtitle),
+  // falling back to Wet Noses' own current line if no theme row exists.
+  const { loginSubtitle } = useOrgCopy({ loginSubtitle: "For Wet Noses staff, admins, and vets only." });
   const searchParams = useSearchParams();
   const reason = searchParams.get("reason");
   const [email, setEmail] = useState("");
@@ -50,7 +55,7 @@ export default function LoginForm() {
           Worker sign-in
         </h1>
         <p style={{ color: `${COLORS.ink}99` }} className="text-sm mb-8">
-          For Wet Noses staff, admins, and vets only.
+          {loginSubtitle}
         </p>
 
         {reason && REASON_MESSAGES[reason] && (

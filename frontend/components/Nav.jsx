@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { PawPrint, ChevronRight } from "lucide-react";
-import { COLORS, FONTS } from "../lib/design-tokens";
+import { useAppTheme } from "../lib/theme-context";
 import { supabase } from "../lib/supabase-client";
 import LogoutButton from "./LogoutButton";
 import NavMenu from "./NavMenu";
@@ -22,6 +22,7 @@ import NavMenu from "./NavMenu";
 // correct - there's no tenant to attribute the crumb to.
 
 export default function Nav({ crumb, orgName }) {
+  const { COLORS, FONTS } = useAppTheme();
   const [resolvedOrgName, setResolvedOrgName] = useState(orgName || null);
 
   useEffect(() => {

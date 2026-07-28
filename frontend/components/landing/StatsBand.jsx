@@ -1,4 +1,5 @@
-import { COLORS, FONTS } from "../../lib/landing-tokens";
+"use client";
+import { useLandingTheme } from "../../lib/theme-context";
 
 // PLACEHOLDER NUMBERS - these need to come from the founder/database
 // before launch. Not wired to Supabase in this pass, per task scope.
@@ -9,6 +10,7 @@ const STATS = [
 ];
 
 export default function StatsBand() {
+  const { COLORS, FONTS } = useLandingTheme();
   return (
     <section style={{ backgroundColor: COLORS.seaGlass }} className="px-6 py-16">
       <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-10 text-center">

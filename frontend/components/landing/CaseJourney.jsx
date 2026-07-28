@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { PawPrint, Check, ImageOff } from "lucide-react";
-import { COLORS, FONTS } from "../../lib/landing-tokens";
+import { useLandingTheme } from "../../lib/theme-context";
 
 // PLACEHOLDER case content - a real case's photos and details, once
 // case_photos has real public_ok=true / sensitivity=normal rows, will
@@ -44,6 +44,7 @@ const STAGES = [
 ];
 
 function ProgressPath({ activeIndex }) {
+  const { COLORS } = useLandingTheme();
   return (
     <div className="flex items-center gap-1.5 mb-5">
       {STAGES.map((s, i) => (
@@ -70,6 +71,7 @@ function ProgressPath({ activeIndex }) {
 }
 
 function CaseSnapshot({ activeIndex, scale = true }) {
+  const { COLORS, FONTS } = useLandingTheme();
   const stage = STAGES[activeIndex];
   return (
     <motion.div
@@ -113,6 +115,7 @@ function CaseSnapshot({ activeIndex, scale = true }) {
 }
 
 function Beat({ stage, index, onEnter }) {
+  const { COLORS, FONTS } = useLandingTheme();
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -146,6 +149,7 @@ function Beat({ stage, index, onEnter }) {
 }
 
 export default function CaseJourney() {
+  const { COLORS, FONTS } = useLandingTheme();
   const [activeStage, setActiveStage] = useState(0);
 
   return (

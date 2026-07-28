@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ChevronDown, Check, ScrollText } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
-import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
+import { useAppTheme } from "../../lib/theme-context";
 import { supabase } from "../../lib/supabase-client";
 
 // Reachable by admin and legal_reviewer only (see middleware.js's
@@ -12,6 +12,7 @@ import { supabase } from "../../lib/supabase-client";
 // to anything else in the app.
 
 function EntryCard({ entry, onSave, onMarkReviewed }) {
+  const { COLORS, FONTS, inputStyle } = useAppTheme();
   const [expanded, setExpanded] = useState(false);
   const [draft, setDraft] = useState(entry);
   const [saving, setSaving] = useState(false);
@@ -84,6 +85,7 @@ function EntryCard({ entry, onSave, onMarkReviewed }) {
 }
 
 export default function LegalReviewPage() {
+  const { COLORS, FONTS } = useAppTheme();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

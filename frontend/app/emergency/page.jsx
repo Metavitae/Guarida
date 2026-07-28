@@ -3,7 +3,7 @@ import { useState } from "react";
 import { PawPrint, Home as HomeIcon, TreePine, Phone, Mail, ExternalLink, MapPin, AlertCircle } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
-import { COLORS, FONTS } from "../../lib/design-tokens";
+import { useAppTheme } from "../../lib/theme-context";
 
 // Reference content only - not a form/workflow. Every number/link here is
 // verbatim from Wet Noses' own published protocol (wetnosesrescue.org/report/)
@@ -13,6 +13,7 @@ import { COLORS, FONTS } from "../../lib/design-tokens";
 // and no public info on a separate after-hours line for Wet Noses' own clinic.
 
 function SourceTag({ children, light = false }) {
+  const { COLORS, FONTS } = useAppTheme();
   return (
     <span
       style={{
@@ -27,7 +28,8 @@ function SourceTag({ children, light = false }) {
   );
 }
 
-function ContactCard({ title, source, children, accent = COLORS.teal }) {
+function ContactCard({ title, source, children }) {
+  const { COLORS, FONTS } = useAppTheme();
   return (
     <div style={{ backgroundColor: "#FFFFFF", border: `1.5px solid ${COLORS.line}` }} className="rounded-2xl p-5">
       <div className="flex items-center justify-between gap-3 mb-3">
@@ -42,6 +44,7 @@ function ContactCard({ title, source, children, accent = COLORS.teal }) {
 }
 
 function NotAvailable({ label }) {
+  const { COLORS } = useAppTheme();
   return (
     <div style={{ color: `${COLORS.ink}66` }} className="flex items-center gap-1.5 text-xs italic">
       <AlertCircle size={12} />
@@ -57,6 +60,7 @@ const SITUATIONS = [
 ];
 
 export default function EmergencyPage() {
+  const { COLORS, FONTS } = useAppTheme();
   const [situation, setSituation] = useState("street");
   const [location, setLocation] = useState("nayarit");
 
@@ -126,7 +130,7 @@ export default function EmergencyPage() {
         {/* Primary routed result */}
         <Reveal delay={0.03} className="mb-4">
           {situation === "wildlife" && (
-            <ContactCard title="PROFEPA — Federal wildlife authority" source="Federal · fauna silvestre only" accent={COLORS.marigold}>
+            <ContactCard title="PROFEPA — Federal wildlife authority" source="Federal · fauna silvestre only">
               <p><strong>For wildlife (fauna silvestre) only — not domestic dogs/cats.</strong> Use one of the Nayarit/Jalisco channels above for domestic animals.</p>
               <a href="tel:8007763372" style={{ color: COLORS.teal }} className="flex items-center gap-2 font-medium">
                 <Phone size={14} /> 800 776 3372 (toll-free)

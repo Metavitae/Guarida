@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, Globe2, ArrowRight } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
-import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
+import { useAppTheme } from "../../lib/theme-context";
 import { supabase } from "../../lib/supabase-client";
 
 // "cross_border_transports" is a PLACEHOLDER table name pending Wet Noses'
@@ -13,6 +13,7 @@ const ANIMAL_STATUSES = ["in_care", "fostered", "quarantine", "in_transit", "ado
 const TRANSPORT_STATUSES = ["quarantine", "in_transit", "completed", "cancelled"];
 
 function Field({ label, children }) {
+  const { COLORS, FONTS } = useAppTheme();
   return (
     <div className="mb-4">
       <label style={{ color: COLORS.ink, fontFamily: FONTS.mono }} className="block text-xs tracking-wide uppercase mb-2 opacity-70">
@@ -24,6 +25,7 @@ function Field({ label, children }) {
 }
 
 export default function CrossBorderPage() {
+  const { COLORS, FONTS, inputStyle } = useAppTheme();
   const [orgId, setOrgId] = useState(null);
   const [animals, setAnimals] = useState([]);
   const [transports, setTransports] = useState([]);

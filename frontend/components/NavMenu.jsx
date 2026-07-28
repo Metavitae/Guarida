@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import { COLORS, FONTS } from "../lib/design-tokens";
+import { useAppTheme } from "../lib/theme-context";
 import { supabase } from "../lib/supabase-client";
 
 const WORKER_LINKS = [
@@ -36,6 +36,7 @@ const PUBLIC_LINKS = [
 // component also renders on the public /emergency and /report-guide pages)
 // see only the public links plus a sign-in link.
 export default function NavMenu() {
+  const { COLORS, FONTS } = useAppTheme();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [access, setAccess] = useState({

@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
-import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
+import { useAppTheme } from "../../lib/theme-context";
 import { supabase, suggestLegalMatches as suggestLegalMatchesReal } from "../../lib/supabase-client";
 
 // Fallback sample, used ONLY when Supabase isn't configured yet — clearly
@@ -34,6 +34,7 @@ function sampleMatch(description) {
 }
 
 function Field({ label, children }) {
+  const { COLORS, FONTS } = useAppTheme();
   return (
     <div className="mb-6">
       <label style={{ color: COLORS.ink, fontFamily: FONTS.mono }} className="block text-xs tracking-wide uppercase mb-2 opacity-70">
@@ -45,6 +46,7 @@ function Field({ label, children }) {
 }
 
 export default function CaseIntakePage() {
+  const { COLORS, FONTS, inputStyle } = useAppTheme();
   const [description, setDescription] = useState("");
   const [title, setTitle] = useState("");
   const [species, setSpecies] = useState("dog");

@@ -2,11 +2,12 @@
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { supabase } from "../lib/supabase-client";
-import { COLORS } from "../lib/design-tokens";
+import { useAppTheme } from "../lib/theme-context";
 
 // Small client component so Nav.jsx itself can stay a server component
 // except for this one interactive piece.
 export default function LogoutButton() {
+  const { COLORS } = useAppTheme();
   const router = useRouter();
 
   async function handleLogout() {

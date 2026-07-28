@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Home, Send, AlertCircle, Check, Clock } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
-import { COLORS, FONTS } from "../../lib/design-tokens";
+import { useAppTheme } from "../../lib/theme-context";
 import { supabase } from "../../lib/supabase-client";
 
 // Active foster placements, with a manual "send check-in" action per
@@ -12,6 +12,7 @@ import { supabase } from "../../lib/supabase-client";
 // what this pass was about (see docs/foster-checkin-schema.md).
 
 function PlacementCard({ p, onSend, onResolve }) {
+  const { COLORS, FONTS } = useAppTheme();
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
   const [resolving, setResolving] = useState(false);
@@ -70,6 +71,7 @@ function PlacementCard({ p, onSend, onResolve }) {
 }
 
 export default function FostersPage() {
+  const { COLORS, FONTS } = useAppTheme();
   const [placements, setPlacements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

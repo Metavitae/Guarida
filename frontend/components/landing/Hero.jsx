@@ -1,11 +1,23 @@
 "use client";
 import { motion } from "framer-motion";
 import { ArrowDown } from "lucide-react";
-import { COLORS, FONTS } from "../../lib/landing-tokens";
+import { useLandingTheme, useOrgCopy } from "../../lib/theme-context";
 
 // CTA hrefs are placeholders - no donation or adoption-listing pages exist
 // yet, per this task's scope (UI only, no real data/destinations wired).
+//
+// Eyebrow/tagline/subtitle/body used to be hardcoded Wet Noses copy -
+// now themeable per org (see docs/multi-org-theming-schema.md's copy.*
+// keys), falling back to Wet Noses' own current text if no theme row
+// exists yet.
 export default function Hero() {
+  const { COLORS, FONTS } = useLandingTheme();
+  const { heroEyebrow, heroTagline, heroSubtitle, heroBody } = useOrgCopy({
+    heroEyebrow: "Wet Noses Rescue — Punta de Mita, Nayarit",
+    heroTagline: "Every case is a story.",
+    heroSubtitle: "Yours can change how it ends.",
+    heroBody: "Every animal that comes through Wet Noses has a real, specific path — from the moment they're found to the moment they're safe. Follow one below, then help write the next one.",
+  });
   return (
     <section
       style={{ backgroundColor: COLORS.deepTide }}
@@ -21,25 +33,23 @@ export default function Hero() {
           style={{ color: COLORS.marigold, fontFamily: FONTS.mono }}
           className="text-xs tracking-[0.3em] uppercase mb-6"
         >
-          Wet Noses Rescue — Punta de Mita, Nayarit
+          {heroEyebrow}
         </div>
 
         <h1
           style={{ fontFamily: FONTS.display, color: COLORS.bone }}
           className="text-5xl md:text-7xl leading-tight mb-6"
         >
-          Every case is a story.
+          {heroTagline}
           <br />
-          Yours can change how it ends.
+          {heroSubtitle}
         </h1>
 
         <p
           style={{ color: `${COLORS.seaGlass}cc`, fontFamily: FONTS.body }}
           className="text-base md:text-lg leading-relaxed max-w-lg mx-auto mb-10"
         >
-          Every animal that comes through Wet Noses has a real, specific
-          path — from the moment they're found to the moment they're safe.
-          Follow one below, then help write the next one.
+          {heroBody}
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

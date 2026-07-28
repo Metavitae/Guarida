@@ -3,10 +3,11 @@ import { useState, useEffect, useCallback } from "react";
 import { DollarSign } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
-import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
+import { useAppTheme } from "../../lib/theme-context";
 import { supabase } from "../../lib/supabase-client";
 
 function Field({ label, children }) {
+  const { COLORS, FONTS } = useAppTheme();
   return (
     <div className="mb-4">
       <label style={{ color: COLORS.ink, fontFamily: FONTS.mono }} className="block text-xs tracking-wide uppercase mb-2 opacity-70">
@@ -18,6 +19,7 @@ function Field({ label, children }) {
 }
 
 export default function ExpensesPage() {
+  const { COLORS, FONTS, inputStyle } = useAppTheme();
   const [orgId, setOrgId] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [cases, setCases] = useState([]);

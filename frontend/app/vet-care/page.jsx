@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Stethoscope, Clock, Check, Send, Users, ChevronDown, AlertCircle } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
-import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
+import { useAppTheme } from "../../lib/theme-context";
 import { supabase } from "../../lib/supabase-client";
 
 // Cases land here the moment case-intake flags needs_vet_care = true.
@@ -13,6 +13,7 @@ import { supabase } from "../../lib/supabase-client";
 // initiated message and may land outside any open messaging window.
 
 function CaseCard({ c, onAcknowledge, onSavePlan, onSend }) {
+  const { COLORS, FONTS, inputStyle } = useAppTheme();
   const [expanded, setExpanded] = useState(false);
   const [draft, setDraft] = useState(c.notification?.care_plan_text ?? "");
   const [saving, setSaving] = useState(false);
@@ -98,6 +99,7 @@ function CaseCard({ c, onAcknowledge, onSavePlan, onSend }) {
 }
 
 export default function VetCarePage() {
+  const { COLORS, FONTS } = useAppTheme();
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

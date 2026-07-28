@@ -3,16 +3,22 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { UserPlus, Circle, ChevronDown, Check, ArrowRight, Plus } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
-import { COLORS, FONTS, inputStyle } from "../../lib/design-tokens";
+import { useAppTheme } from "../../lib/theme-context";
 import { supabase } from "../../lib/supabase-client";
 
 const STAGES = ["identified", "contacted", "engaged", "converted", "declined"];
-const stageColor = {
-  identified: `${COLORS.ink}55`, contacted: COLORS.marigold, engaged: COLORS.teal,
-  converted: COLORS.green, declined: COLORS.coral,
-};
+// Was a module-level constant computed once from a static COLORS import;
+// now takes COLORS as a param since it comes from useAppTheme() instead.
+function getStageColor(COLORS) {
+  return {
+    identified: `${COLORS.ink}55`, contacted: COLORS.marigold, engaged: COLORS.teal,
+    converted: COLORS.green, declined: COLORS.coral,
+  };
+}
 
 function ProspectCard({ p, onSave, onConvert }) {
+  const { COLORS, FONTS, inputStyle } = useAppTheme();
+  const stageColor = getStageColor(COLORS);
   const [expanded, setExpanded] = useState(false);
   const [draft, setDraft] = useState(p);
   const [saving, setSaving] = useState(false);
@@ -89,6 +95,7 @@ function ProspectCard({ p, onSave, onConvert }) {
 }
 
 function NewProspectForm({ onAdd, onCancel }) {
+  const { COLORS, inputStyle } = useAppTheme();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
@@ -121,6 +128,7 @@ function NewProspectForm({ onAdd, onCancel }) {
 }
 
 export default function ProspectsPage() {
+  const { COLORS, FONTS, inputStyle } = useAppTheme();
   const [prospects, setProspects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

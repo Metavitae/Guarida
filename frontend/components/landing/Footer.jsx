@@ -1,5 +1,6 @@
+"use client";
 import { Instagram, Facebook, MessageCircle, Music2 } from "lucide-react";
-import { COLORS, FONTS } from "../../lib/landing-tokens";
+import { useLandingTheme, useOrgCopy } from "../../lib/theme-context";
 
 // Social hrefs are placeholders - real accounts don't exist yet, per task scope.
 const SOCIALS = [
@@ -10,6 +11,11 @@ const SOCIALS = [
 ];
 
 export default function Footer() {
+  const { COLORS, FONTS } = useLandingTheme();
+  const { footerOrgName, footerLocation } = useOrgCopy({
+    footerOrgName: "Wet Noses Rescue",
+    footerLocation: "Punta de Mita, Bahía de Banderas, Nayarit, México",
+  });
   return (
     <footer style={{ backgroundColor: COLORS.deepTide }} className="px-6 pt-20 pb-10">
       <div className="max-w-3xl mx-auto text-center mb-16">
@@ -40,10 +46,10 @@ export default function Footer() {
       >
         <div>
           <div style={{ fontFamily: FONTS.display, color: COLORS.bone }} className="text-lg mb-2">
-            Wet Noses Rescue
+            {footerOrgName}
           </div>
           <p style={{ color: `${COLORS.seaGlass}99`, fontFamily: FONTS.body }} className="text-sm leading-relaxed">
-            Punta de Mita, Bahía de Banderas, Nayarit, México
+            {footerLocation}
             <br />
             Nonprofit animal rescue
           </p>
