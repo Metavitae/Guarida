@@ -4,7 +4,7 @@ import { DollarSign } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
 import { useAppTheme } from "../../lib/theme-context";
-import { supabase } from "../../lib/supabase-client";
+import { supabase, getCurrentOrgId } from "../../lib/supabase-client";
 
 function Field({ label, children }) {
   const { COLORS, FONTS } = useAppTheme();
@@ -43,17 +43,12 @@ export default function ExpensesPage() {
   useEffect(() => {
     async function init() {
       if (!supabase) { setError("Supabase isn't configured."); setLoading(false); return; }
-      const { data: memberships, error: memErr } = await supabase
-        .from("memberships")
-        .select("org_id")
-        .eq("status", "active")
-        .limit(1);
-      if (memErr || !memberships?.length) {
+      const org = await getCurrentOrgId(supabase);
+      if (!org) {
         setError("Couldn't find an active org membership for this account.");
         setLoading(false);
         return;
       }
-      const org = memberships[0].org_id;
       setOrgId(org);
       await loadExpenses(org);
       const { data: caseRows } = await supabase.from("cases").select("id, title").eq("org_id", org).order("title");

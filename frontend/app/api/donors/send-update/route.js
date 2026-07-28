@@ -16,14 +16,19 @@ export async function POST(request) {
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return Response.json({ error: "Not authenticated" }, { status: 401 });
 
-  const { data: isAdminOrStaff } = await authClient.rpc("is_admin_or_staff");
+  // Multi-org (2026-07-28): scope the role check to the org the caller has
+  // actually selected via the org-switcher, not "any org they're admin/
+  // staff in" - see docs/multi-org-membership-schema.md. Absent for every
+  // single-org person, same as always.
+  const currentOrgId = cookieStore.get("gd_current_org_id")?.value;
+  const { data: isAdminOrStaff } = await authClient.rpc("is_admin_or_staff", currentOrgId ? { check_org_id: currentOrgId } : undefined);
   if (!isAdminOrStaff) return Response.json({ error: "Admin/staff only" }, { status: 403 });
 
   // The caller's own org, not a global env default - see the identical fix
   // in /api/fosters/send-checkin and /api/vet-care/send-notice. Uses
   // my_org() (security-definer RPC) rather than a direct organizations
   // select, same recursive-RLS-on-`people` sidestep as case-intake.
-  const { data: callerOrg } = await authClient.rpc("my_org").maybeSingle();
+  const { data: callerOrg } = await authClient.rpc("my_org", { check_org_id: currentOrgId }).maybeSingle();
   if (!callerOrg?.org_id) return Response.json({ error: "Could not resolve your org membership" }, { status: 403 });
 
   const { donorId, summary } = await request.json();

@@ -27,11 +27,20 @@ export async function GET(request) {
   const { data: { user }, error: userErr } = await authClient.auth.getUser();
   if (userErr || !user) return Response.json({ error: "Not authenticated" }, { status: 401 });
 
-  const { data: isWorker } = await authClient.rpc("is_active_worker");
+  // Multi-org (2026-07-28): this route is bearer-token based (per the
+  // comment above, deliberately callable from a script/curl, not just the
+  // browser), so it has no cookie to read a switcher choice from - an
+  // explicit ?orgId= query param is the equivalent for a script caller.
+  // is_active_worker(check_org_id) re-verifies it's a real active
+  // membership, never trusted blindly. Falls back to my_org()'s own
+  // arbitrary-first-org behavior if omitted, same as before, correct for
+  // every single-org caller (100% of them today).
+  const requestedOrgId = new URL(request.url).searchParams.get("orgId");
+  const { data: isWorker } = await authClient.rpc("is_active_worker", requestedOrgId ? { check_org_id: requestedOrgId } : undefined);
   if (!isWorker) return Response.json({ error: "Not an active worker" }, { status: 403 });
 
   // The caller's own org, not a global default - see docs/multi-org-whatsapp-schema.md.
-  const { data: callerOrg } = await authClient.rpc("my_org").maybeSingle();
+  const { data: callerOrg } = await authClient.rpc("my_org", { check_org_id: requestedOrgId }).maybeSingle();
   if (!callerOrg?.org_id) return Response.json({ error: "Could not resolve your org membership" }, { status: 403 });
 
   try {

@@ -3,9 +3,10 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { PawPrint, ChevronRight } from "lucide-react";
 import { useAppTheme } from "../lib/theme-context";
-import { supabase } from "../lib/supabase-client";
+import { supabase, getCurrentOrgId } from "../lib/supabase-client";
 import LogoutButton from "./LogoutButton";
 import NavMenu from "./NavMenu";
+import OrgSwitcher from "./OrgSwitcher";
 
 // Every screen had its own slightly-different copy of this nav bar.
 // One real bug that copy-paste caused: the Vet Care screen's breadcrumb
@@ -29,7 +30,12 @@ export default function Nav({ crumb, orgName }) {
     if (orgName || !supabase) return;
     let cancelled = false;
     (async () => {
-      const { data: orgRow } = await supabase.rpc("my_org").maybeSingle();
+      // Multi-org (2026-07-28): pass the currently-selected org (if the
+      // person has made a choice via OrgSwitcher) so the breadcrumb shows
+      // whichever org they're actually acting as, not an arbitrary one -
+      // see docs/multi-org-membership-schema.md.
+      const currentOrgId = await getCurrentOrgId(supabase);
+      const { data: orgRow } = await supabase.rpc("my_org", { check_org_id: currentOrgId }).maybeSingle();
       if (!cancelled && orgRow?.name) setResolvedOrgName(orgRow.name);
     })();
     return () => { cancelled = true; };
@@ -53,6 +59,7 @@ export default function Nav({ crumb, orgName }) {
         </span>
       </div>
       <div className="ml-auto flex items-center gap-4 shrink-0">
+        <OrgSwitcher />
         <NavMenu />
         <LogoutButton />
       </div>

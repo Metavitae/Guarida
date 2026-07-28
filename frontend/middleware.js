@@ -47,10 +47,22 @@ export async function middleware(request) {
     return NextResponse.redirect(url);
   }
 
+  // Multi-org (2026-07-28, see docs/multi-org-membership-schema.md): if
+  // this person has picked a current org via the org-switcher, role checks
+  // must scope to THAT org specifically, not "any org this person happens
+  // to hold the role in" - the gap the founder explicitly flagged as the
+  // highest data-leak risk in this whole task. Absent for every single-org
+  // person (nobody sees the switcher, nobody ever sets this cookie), so
+  // this falls back to the exact same zero-arg "any org" calls as before -
+  // zero behavior change for anyone until a second org and a multi-org
+  // person both actually exist.
+  const currentOrgId = request.cookies.get("gd_current_org_id")?.value;
+  const rpcArgs = currentOrgId ? { check_org_id: currentOrgId } : undefined;
+
   const isLegalReviewRoute = request.nextUrl.pathname.startsWith("/legal-review");
   const isDonorsRoute = request.nextUrl.pathname.startsWith("/donors") || request.nextUrl.pathname.startsWith("/prospects");
   const routeRpc = isLegalReviewRoute ? "can_review_legal" : isDonorsRoute ? "is_admin_or_staff" : "is_active_worker";
-  const { data: hasRouteAccess } = await supabase.rpc(routeRpc);
+  const { data: hasRouteAccess } = await supabase.rpc(routeRpc, rpcArgs);
 
   if (!hasRouteAccess) {
     // Before treating this as a revoked/invalid account, check whether they
@@ -61,8 +73,8 @@ export async function middleware(request) {
     // them to re-login over that. Only sign out when neither check passes,
     // i.e. their account genuinely has no active role.
     const [{ data: isWorker }, { data: isReviewer }] = await Promise.all([
-      supabase.rpc("is_active_worker"),
-      supabase.rpc("can_review_legal"),
+      supabase.rpc("is_active_worker", rpcArgs),
+      supabase.rpc("can_review_legal", rpcArgs),
     ]);
     const hasAnyRole = isWorker || isReviewer;
 

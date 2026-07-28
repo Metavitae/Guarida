@@ -8,7 +8,7 @@ import {
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
 import { useAppTheme } from "../../lib/theme-context";
-import { supabase, suggestLegalMatches as suggestLegalMatchesReal } from "../../lib/supabase-client";
+import { supabase, getCurrentOrgId, suggestLegalMatches as suggestLegalMatchesReal } from "../../lib/supabase-client";
 
 // Fallback sample, used ONLY when Supabase isn't configured yet — clearly
 // labeled in the UI so nobody mistakes sample data for real matches.
@@ -76,7 +76,11 @@ export default function CaseIntakePage() {
       // real authenticated staff session gets "infinite recursion detected
       // in policy for relation people" back from a plain organizations
       // select). Same sidestep pattern as the existing my_person_id().
-      const { data: orgRow, error } = await supabase.rpc("my_org").maybeSingle();
+      // Passes the currently-selected org (docs/multi-org-membership-schema.md)
+      // so a multi-org person reports into the org they're actually acting
+      // as, not an arbitrary one of theirs.
+      const currentOrgId = await getCurrentOrgId(supabase);
+      const { data: orgRow, error } = await supabase.rpc("my_org", { check_org_id: currentOrgId }).maybeSingle();
       if (cancelled || error || !orgRow) return;
       setOrgId(orgRow.org_id);
       setJurisdiction(orgRow.jurisdiction_state ? `${orgRow.country}-${orgRow.jurisdiction_state}` : (orgRow.country || "MX"));

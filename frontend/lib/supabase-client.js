@@ -28,6 +28,32 @@ export function requireSupabase() {
   return supabase;
 }
 
+// Multi-org membership (2026-07-28, see docs/multi-org-membership-schema.md):
+// most people belong to exactly one active org, so this returns it with no
+// ambiguity. For someone active in more than one, this honors their real
+// choice from the org-switcher (the gd_current_org_id cookie) if that
+// choice is still one of their actual active memberships - falls back to
+// the first active membership otherwise, which covers single-org people
+// (who never see the switcher and never set this cookie - zero behavior
+// change for them) and a stale cookie left over from a since-revoked
+// membership.
+export const CURRENT_ORG_COOKIE = "gd_current_org_id";
+
+function readCookie(name) {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+export async function getCurrentOrgId(client = supabase) {
+  if (!client) return null;
+  const { data: memberships } = await client.from("memberships").select("org_id").eq("status", "active");
+  if (!memberships?.length) return null;
+  const cookieOrg = readCookie(CURRENT_ORG_COOKIE);
+  if (cookieOrg && memberships.some((m) => m.org_id === cookieOrg)) return cookieOrg;
+  return memberships[0].org_id;
+}
+
 // English-language coverage, additive to the Spanish literal-text matching
 // below. Wet Noses' foster network reaches the US/Canada, so an English
 // description needs to match too — the legal_references table itself is

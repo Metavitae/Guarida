@@ -4,7 +4,7 @@ import { UserPlus, Circle, ChevronDown, Check, ArrowRight, Plus } from "lucide-r
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
 import { useAppTheme } from "../../lib/theme-context";
-import { supabase } from "../../lib/supabase-client";
+import { supabase, getCurrentOrgId } from "../../lib/supabase-client";
 
 const STAGES = ["identified", "contacted", "engaged", "converted", "declined"];
 // Was a module-level constant computed once from a static COLORS import;
@@ -139,8 +139,7 @@ export default function ProspectsPage() {
 
   const load = useCallback(async () => {
     if (!supabase) { setError("Supabase isn't configured."); setLoading(false); return; }
-    const { data: memberships } = await supabase.from("memberships").select("org_id").eq("status", "active").limit(1);
-    setOrgId(memberships?.[0]?.org_id ?? null);
+    setOrgId(await getCurrentOrgId(supabase));
 
     const { data, error: err } = await supabase.from("prospects").select("*");
     if (err) { setError(err.message); setLoading(false); return; }

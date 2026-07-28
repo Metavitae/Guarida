@@ -5,7 +5,7 @@ import { Heart, Home, PawPrint, Circle, Plus, ChevronDown, Check, Send, AlertCir
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
 import { useAppTheme } from "../../lib/theme-context";
-import { supabase } from "../../lib/supabase-client";
+import { supabase, getCurrentOrgId } from "../../lib/supabase-client";
 
 // "fosters" tab is still demo-only, unrelated to this task (real foster
 // data now lives at /fosters, built separately). "donors" tab below is
@@ -218,8 +218,7 @@ export default function DonorsPage() {
 
   const load = useCallback(async () => {
     if (!supabase) { setError("Supabase isn't configured."); setLoading(false); return; }
-    const { data: memberships } = await supabase.from("memberships").select("org_id").eq("status", "active").limit(1);
-    const org = memberships?.[0]?.org_id ?? null;
+    const org = await getCurrentOrgId(supabase);
     setOrgId(org);
 
     const { data, error: err } = await supabase.from("donors").select("*").order("name");

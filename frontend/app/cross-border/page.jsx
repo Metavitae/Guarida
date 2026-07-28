@@ -4,7 +4,7 @@ import { Plus, Globe2, ArrowRight } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
 import { useAppTheme } from "../../lib/theme-context";
-import { supabase } from "../../lib/supabase-client";
+import { supabase, getCurrentOrgId } from "../../lib/supabase-client";
 
 // "cross_border_transports" is a PLACEHOLDER table name pending Wet Noses'
 // own internal term for this stage - see docs/cross-border-transport-schema.md.
@@ -58,14 +58,12 @@ export default function CrossBorderPage() {
   useEffect(() => {
     async function init() {
       if (!supabase) { setError("Supabase isn't configured."); setLoading(false); return; }
-      const { data: memberships, error: memErr } = await supabase
-        .from("memberships").select("org_id").eq("status", "active").limit(1);
-      if (memErr || !memberships?.length) {
+      const org = await getCurrentOrgId(supabase);
+      if (!org) {
         setError("Couldn't find an active org membership for this account.");
         setLoading(false);
         return;
       }
-      const org = memberships[0].org_id;
       setOrgId(org);
       await loadAll(org);
       setLoading(false);

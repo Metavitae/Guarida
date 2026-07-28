@@ -5,7 +5,7 @@ import { Plus, ArrowDownCircle, ArrowUpCircle, Package } from "lucide-react";
 import Nav from "../../components/Nav";
 import Reveal from "../../components/Reveal";
 import { useAppTheme } from "../../lib/theme-context";
-import { supabase } from "../../lib/supabase-client";
+import { supabase, getCurrentOrgId } from "../../lib/supabase-client";
 
 function Field({ label, children }) {
   const { COLORS, FONTS } = useAppTheme();
@@ -47,17 +47,12 @@ export default function InventoryPage() {
   useEffect(() => {
     async function init() {
       if (!supabase) { setError("Supabase isn't configured."); setLoading(false); return; }
-      const { data: memberships, error: memErr } = await supabase
-        .from("memberships")
-        .select("org_id")
-        .eq("status", "active")
-        .limit(1);
-      if (memErr || !memberships?.length) {
+      const org = await getCurrentOrgId(supabase);
+      if (!org) {
         setError("Couldn't find an active org membership for this account.");
         setLoading(false);
         return;
       }
-      const org = memberships[0].org_id;
       setOrgId(org);
       await loadItems(org);
       setLoading(false);
